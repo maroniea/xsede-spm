@@ -1,0 +1,116 @@
+!    -*- f90 -*-
+! Note: the context of this file is case sensitive.
+
+python module capsolpy ! in 
+    interface  ! in :capsolpy
+        module defcapsol ! in :capsolpy:CapSolPy.f90
+            integer, parameter,optional :: dp=kind(1.d0)
+            real(kind=8), parameter,optional :: pi=3.141592653589793238462643383279502884197_dp
+            real(kind=8), parameter,optional :: e0=8.854187817620d-3
+            real(kind=8), parameter,optional,depend(pi,e0) :: pi_e0=pi*e0
+            real(kind=8) :: d_min
+            real(kind=8) :: d_max
+            real(kind=8) :: z
+            real(kind=8) :: qn
+            real(kind=8) :: qm
+            real(kind=8) :: ql
+            real(kind=8), allocatable,dimension(:) :: hn
+            real(kind=8), allocatable,dimension(:) :: r
+            real(kind=8), allocatable,dimension(:) :: hm
+            real(kind=8), allocatable,dimension(:) :: zm
+            real(kind=8), allocatable,dimension(:,:) :: u
+            real(kind=8), allocatable,dimension(:,:) :: g
+            integer, allocatable,dimension(:) :: probebot
+            integer, allocatable,dimension(:) :: probetop
+            real, allocatable,dimension(:,:) :: b
+            integer :: napex
+            integer :: ncone
+            integer :: nlever
+            integer :: nedge
+            integer :: js
+            integer :: i
+            integer :: j
+            integer :: k
+            real(kind=8) :: energy
+            real(kind=8) :: gnrm
+            real(kind=8) :: x
+            real(kind=8) :: y
+            real(kind=8) :: er
+            real(kind=8) :: ez
+            real(kind=8) :: force
+            logical :: spheretest
+            logical :: leveronlytest
+            subroutine generategrid(n,m,l,h0,rho_max,z_max,rtip,theta,hcone,rcant,dcant,eps_r,hsam,verbose) ! in :capsolpy:CapSolPy.f90:defcapsol
+                integer intent(in) :: n
+                integer intent(in) :: m
+                integer intent(in) :: l
+                real*8 intent(in) :: h0
+                real*8 intent(in) :: rho_max
+                real*8 intent(in) :: z_max
+                real*8 intent(in) :: rtip
+                real*8 intent(in) :: theta
+                real*8 intent(in) :: hcone
+                real*8 intent(in) :: rcant
+                real*8 intent(in) :: dcant
+                real*8 intent(in) :: eps_r
+                real*8 intent(in) :: hsam
+                integer intent(in) :: verbose
+            end subroutine generategrid
+            subroutine setupprobe(n,m,l,h0,rtip,theta,hcone,rcant,dcant,eps_r,hsam,verbose) ! in :capsolpy:CapSolPy.f90:defcapsol
+                integer intent(in) :: n
+                integer intent(in) :: m
+                integer intent(in) :: l
+                real*8 intent(in) :: h0
+                real*8 intent(in) :: rtip
+                real*8 intent(in) :: theta
+                real*8 intent(in) :: hcone
+                real*8 intent(in) :: rcant
+                real*8 intent(in) :: dcant
+                real*8 intent(in) :: eps_r
+                real*8 intent(in) :: hsam
+                integer intent(in) :: verbose
+            end subroutine setupprobe
+            subroutine integratedforce(n,m,l,z,rtip,theta,hcone,rcant,dcant,eps_r,hsam) ! in :capsolpy:CapSolPy.f90:defcapsol
+                integer intent(in) :: n
+                integer intent(in) :: m
+                integer intent(in) :: l
+                real*8 intent(in) :: z
+                real*8 intent(in) :: rtip
+                real*8 intent(in) :: theta
+                real*8 intent(in) :: hcone
+                real*8 intent(in) :: rcant
+                real*8 intent(in) :: dcant
+                real*8 intent(in) :: eps_r
+                real*8 intent(in) :: hsam
+            end subroutine integratedforce
+            subroutine get_time(time) ! in :capsolpy:CapSolPy.f90:defcapsol
+                character*50 :: time
+            end subroutine get_time
+        end module defcapsol
+        subroutine capsolcyl(n,m,l_js,h0,rho_max,z_max,d,rtip,theta_deg,hcone,rcant,dcant,eps_r,hsam,method_in,test,verbose,c_unitless,hess) ! in :capsolpy:CapSolPy.f90
+            use defcapsol
+            integer intent(in) :: n
+            integer intent(in) :: m
+            integer intent(in) :: l_js
+            real*8 intent(in) :: h0
+            real*8 intent(in) :: rho_max
+            real*8 intent(in) :: z_max
+            real*8 intent(in) :: d
+            real*8 intent(in) :: rtip
+            real*8 intent(in) :: theta_deg
+            real*8 intent(in) :: hcone
+            real*8 intent(in) :: rcant
+            real*8 intent(in) :: dcant
+            real*8 intent(in) :: eps_r
+            real*8 intent(in) :: hsam
+            character*10 intent(in) :: method_in
+            integer intent(in) :: test
+            integer intent(in) :: verbose
+            real*8 intent(out) :: c_unitless
+            real*8, allocatable,dimension(:,:),intent(out) :: hess
+        end subroutine capsolcyl
+    end interface 
+end python module capsolpy
+
+! This file was auto-generated with f2py (version:2).
+! See http://cens.ioc.ee/projects/f2py2e/
