@@ -87,7 +87,7 @@ python module capsolpy ! in
                 character*50 :: time
             end subroutine get_time
         end module defcapsol
-        subroutine capsolcyl(n,m,l_js,h0,rho_max,z_max,d,rtip,theta_deg,hcone,rcant,dcant,eps_r,hsam,method_in,test,verbose,c_unitless,hess) ! in :capsolpy:CapSolPy.f90
+        subroutine capsolcyl(n,m,l_js,h0,rho_max,z_max,d_steps,rtip,theta_deg,hcone,rcant,dcant,eps_r,hsam,method_in,test,verbose,c_unitless,hess) ! in :capsolpy:CapSolPy.f90
             use defcapsol
             integer intent(in) :: n
             integer intent(in) :: m
@@ -95,7 +95,7 @@ python module capsolpy ! in
             real*8 intent(in) :: h0
             real*8 intent(in) :: rho_max
             real*8 intent(in) :: z_max
-            real*8 intent(in) :: d
+            integer intent(in) :: d_steps
             real*8 intent(in) :: rtip
             real*8 intent(in) :: theta_deg
             real*8 intent(in) :: hcone
@@ -107,7 +107,8 @@ python module capsolpy ! in
             integer intent(in) :: test
             integer intent(in) :: verbose
             real*8 intent(out) :: c_unitless
-            real*8, allocatable,dimension(:,:),intent(out) :: hess
+            ! lmn=(n+1)*(l+m+1) ; kdA=m+l+1;  kdB=n+1 ; kd=min(kdA,kdB)
+            real*8 dimension(0:min(m+ l_js + d_steps + 1, n+1), (n+1)*( l_js + d_steps  + m + 1)), intent(out) :: hess
         end subroutine capsolcyl
     end interface 
 end python module capsolpy

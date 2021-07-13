@@ -61,8 +61,8 @@ module defcapsol
     
     qn=1.012
     if(verbose>1) print*,'-----------Additional information:'
-    if(verbose>1) print ('(a,$)'), " Suggested number of grid points (n,m+,m-): "
-    if(verbose>1) print ('(i5,$)'),  nint(log(1_dp+(rho_max/h0-Nuni)*(qn-1_dp))/log(qn) + Nuni)
+   !  if(verbose>1) print ('(a,$)'), " Suggested number of grid points (n,m+,m-): "
+   !  if(verbose>1) print ('(i5,$)'),  nint(log(1_dp+(rho_max/h0-Nuni)*(qn-1_dp))/log(qn) + Nuni)
     ! find the growth factor
     do  qn=1._dp,1.5,1.d-4
       x=h0*(1-qn**(n-Nuni))/(1-qn)
@@ -84,7 +84,7 @@ module defcapsol
     do j=1,Nuni ; zm(j)=h0*j ; enddo
     
     q=1.010
-        if(verbose>1) print('(i5,$)'), nint(log(1_dp+(Z_max/h0-Nuni)*(q-1_dp))/log(q)) + Nuni
+      !   if(verbose>1) print('(i5,$)'), nint(log(1_dp+(Z_max/h0-Nuni)*(q-1_dp))/log(q)) + Nuni
     
     do qm=1._dp,1.5_dp, 1.d-4
       x=h0*(1-qm**(m-Nuni))/(1-qm)
@@ -104,7 +104,7 @@ module defcapsol
     
     if (l+js>0) then 
        q=1.02
-        if(verbose>1)   print'(i5,$)', nint(log(1_dp+(Hsam/h0)*(q-1_dp))/log(q))
+      !   if(verbose>1)   print'(i5,$)', nint(log(1_dp+(Hsam/h0)*(q-1_dp))/log(q))
        do ql=1._dp,2.0_dp,1.d-4
           x=h0*(1-ql**(l+js))/(1-ql)
           if(x>=Hsam) exit
@@ -123,13 +123,13 @@ module defcapsol
     !!print '(a,F6.3,a)',  "      <<<<<<<<<<<<<<<<<<<<<<<<<<<<  Tip-Sample dist= " ,Z," nm >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
     !print '(a,i10,4i5,a,3f8.4)',     " Number of points (TOTAL, n,m+,m-,gap)  "  &
     !       ,(n+1)*(m+l+1) ,n,m,l+js,-js , " ;    Growth factors rho, z+, z- = " ,qn,qm,ql
-    if(verbose>1) then 
-       print '(a,i3)',     "    Additional in gap:   "  ,-js  
-       !print '(a, i8, a, f5.1)',"  >>> N_TOTAL: ",(n+1)*(m+l+1) , '   Approximate memory (GB): ', ((n+1)*(m+l+1))**1.5 * (8+2)*1.e-9
-       print '(a, i8, a, f5.1, "GB")',"  >>>>>>>>>>>>    N_TOTAL: ",(n+1)*(m+l+1) , &
-             ' ; Approximate memory needed: ', (n+1)*(m+l+1)*(min(n,m+l)+5)*8.e-9
-      print '(a,3f7.4)', " Geometic increment factor for mesh spacin (r,z+,z-):" ,qn,qm,ql
-    endif
+   !  if(verbose>1) then 
+   !     print '(a,i3)',     "    Additional in gap:   "  ,-js  
+   !     !print '(a, i8, a, f5.1)',"  >>> N_TOTAL: ",(n+1)*(m+l+1) , '   Approximate memory (GB): ', ((n+1)*(m+l+1))**1.5 * (8+2)*1.e-9
+   !     print '(a, i8, a, f5.1, "GB")',"  >>>>>>>>>>>>    N_TOTAL: ",(n+1)*(m+l+1) , &
+   !           ' ; Approximate memory needed: ', (n+1)*(m+l+1)*(min(n,m+l)+5)*8.e-9
+   !    print '(a,3f7.4)', " Geometic increment factor for mesh spacin (r,z+,z-):" ,qn,qm,ql
+   !  endif
     end subroutine GenerateGrid
     
     
@@ -381,17 +381,17 @@ module defcapsol
 end module defcapsol
     
     !=====================================================
-    subroutine CapSolCyl(n,m,l_js, h0,rho_max,z_max, d, Rtip,theta_deg,HCone,RCant, &
+    subroutine CapSolCyl(n,m,l_js, h0,rho_max,z_max, d_steps, Rtip,theta_deg,HCone,RCant, &
                         dCant, &
                           eps_r,Hsam, Method_in, test, verbose, C_unitless, Hess)   ! Capicatnce Solver with Cylindrical Symmetry 
     use defcapsol
     implicit none 
-    integer, INTENT(IN) :: n, m, l_js, test, verbose
-    real*8, INTENT(IN) :: h0, rho_max, z_max, d, Rtip, theta_deg
+    integer, INTENT(IN) :: n, m, l_js, test, verbose, d_steps
+    real*8, INTENT(IN) :: h0, rho_max, z_max, Rtip, theta_deg
     real*8, INTENT(IN) :: HCone, RCant, dCant, eps_r, Hsam
     character*10, INTENT(IN)         :: Method_in
     real*8, INTENT(OUT) :: C_unitless
-    real*8 , allocatable, INTENT(OUT) :: Hess (:,:) ! as general band storage
+    real*8, dimension(0:min(m+ l_js + d_steps + 1, n+1), (n+1)*( l_js + d_steps + 1)), INTENT(OUT) :: Hess ! as general band storage
 
     character*10 :: Method
    real*8 :: Z_unitless, theta
@@ -436,7 +436,7 @@ end module defcapsol
     theta=theta_deg*pi/180._dp
     Method=trim(Method_in)
     
-    Z=d
+    Z=d_steps * h0
 
     if (method=='NOSOLVE') then
        print*,'No minimization will be done ! ' 
@@ -459,7 +459,7 @@ end module defcapsol
      allocate (aa(-l:m,0:n),bb(-l:m,0:n),gp(0:n,-l:m)) 
      allocate (HA1(lmn),HA2(lmn),HA3(lmn), Hd_1(lmn), HB1(lmn),HB2(lmn),HB3(lmn) , ipiv(lmn))
     
-    if (Method ==  'LAPACK') allocate (Hess(0:kd,lmn))
+   !  if (Method ==  'LAPACK') 
     if (Method == 'PARDISO') allocate (ia(lmn+1),ja(3*lmn-kdA-1),a(3*lmn-kdA-1) )
     
           
@@ -538,11 +538,16 @@ end module defcapsol
              if(i>kd) x=x+abs(Hess(kd,i-kd))
              if(x>HessNorm) HessNorm=x
        enddo
+      !  if(verbose>1) then
+      !    print *, "LBOUND is ", LBOUND(Hess), " UBOUND ", UBOUND(Hess)
+      !  endif
+
          print *, 'Matrix factorization  by LAPACK ...' 
          call dpbtrf( 'L', lmn,kd,Hess,kd+1,info)
          if(info /= 0) then
             print*, info , 'Failure in factorization Hessain matrix ';  stop
          endif
+
    !  print*, ' Estimating condition number ...' 
    !    allocate (work(3*lmn) , iwork(lmn))  ! as general band storage
    !  call dpbcon('L',lmn,kd,Hess,kd+1,HessNorm,rcond,work,iwork,info)
@@ -738,7 +743,7 @@ end module defcapsol
      deallocate (ProbeBot,ProbeTop )
      deallocate (HA1,HA2,HA3, Hd_1, HB1,HB2,HB3, ipiv)
     
-    if (Method ==  'LAPACK') deallocate (Hess)
+   !  if (Method ==  'LAPACK') 
     if (Method == 'PARDISO') deallocate (ia,ja,a)
     
     1000 continue ! end of minimization
