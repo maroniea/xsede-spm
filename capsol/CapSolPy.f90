@@ -3,47 +3,57 @@
 ! The sample is a dielectric with arbitrary thickness (including zero thickness) over a conducting electrode.
 ! sample input file is made automatically in the first run
 ! Author: Ali Sadeghi, Uni Basel, 2011
+! Modified: Ryan Dwyer, 2021
 
 !==========================================
+
+! http://szaghi.github.io/zen-of-fortran-talk/#/slide-117
+
+
+! TO DO: 
 
 module defcapsol
     ! variables
           implicit none
           integer , parameter :: dp=kind(1.d0)  ! double precision
           real(dp), parameter :: pi=3.141592653589793238462643383279502884197_dp
-          real(dp), parameter :: e0=8.854187817620d-3 !vacuum permittivity in nN/V2
+          real(dp), parameter :: e0=8.854187817620e-3_dp !vacuum permittivity in nN/V2
           real(dp), parameter :: pi_e0 = pi*e0 ! to make units for unitless quantities 
-    
-    ! tip and sample parameters
-         !  real(dp)     :: Rtip,RCant,HCone,dCant,theta
-         !  real(dp)     :: eps_r, Hsam 
-    ! tip-sample separation: loops from d_min to d_max
-          real(dp)     :: d_min,d_max,Z 
+   
     
     ! simulation parameters
          !  real(dp)     :: h0,rho_max,Z_max   ! finest grid spacing and simulation box size (truncation lengths)
-          real(dp)     :: qn,qm,ql   ! growth factors 
          !  integer      :: n,m,l ! number of grid points in rho and +/-z directions
-          real(dp), allocatable  :: hn(:),r(:),hm(:),zm(:) ! grid-spacing and coordinates of each grid point
-          real(dp), allocatable  :: u(:,:),g(:,:)  ! potential and its gradient
+         !  real(dp), allocatable  :: hn(:),r(:),hm(:),zm(:) ! grid-spacing and coordinates of each grid point
+          real(dp), allocatable  :: u(:,:), g(:,:)  ! potential and its gradient
     
     ! Definition of the tip for Dirichlet BC
-          integer , allocatable  :: ProbeBot(:), ProbeTop(:)   ! tip geometry: bottom and top
-          real    , allocatable  :: b(:,:)  ! this applies BC: if b(j,i)=1 then it can vary, if =0 Dirichlet BC (fixed) 
+         !  integer , allocatable  :: ProbeBot(:), ProbeTop(:)   ! tip geometry: bottom and top
+         !  real    , allocatable  :: b(:,:)  ! this applies BC: if b(j,i)=1 then it can vary, if =0 Dirichlet BC (fixed) 
           integer      ::  nApex,nCone,nLever,nEdge
           integer      ::  js
-          integer      ::  i,j,k
+         !  integer      ::  i,j,k
           real(dp)     ::  Energy,gnrm,x,y
           real(dp)     :: Er,Ez,Force  ! electric field and force 
           logical      :: spheretest, leveronlytest ! for testing purpose
           
     contains
     
-    subroutine GenerateGrid(n,m,l, h0, rho_max, Z_max, Rtip,theta,HCone,RCant, dCant, eps_r, Hsam, verbose)
+   !  pure function l
+
+   !  allocate (u(-l:m,0:n),g(-l:m,0:n),b(-l:m,0:n) ) ! uexact , u0
+    
+    subroutine GenerateGrid(n,m,l, h0, rho_max, Z_max, Rtip, theta, HCone, RCant, dCant, &
+                            eps_r, Hsam, verbose, hn, r, hm, zm)
     real*8, INTENT(IN) :: h0, rho_max, z_max, Rtip, theta, HCone, RCant, dCant, eps_r, Hsam
-    integer, INTENT(IN) :: n, m, l, verbose  !  __ generates  a non-uniform grid  _______________
+    integer, INTENT(IN) :: n, m, l, verbose  !  __ generates  a non-uniform grid  ___________
+    real(dp), dimension(0:n), INTENT(OUT)  :: hn, r
+    real(dp), dimension(-l:m), INTENT(OUT) :: hm, zm
+ 
     integer Nuni ! number of points in the uniform region
     real(dp) q
+    real(dp)     :: qn,qm,ql   ! growth factors 
+    integer      ::  i,j,k
     ! growth factors are determined according to h0, # of grid-points and box sizes
     ! Alternatively, one can determine # according to known growth factors, h0 and box sizes
     !   or even determine the box sizes according to known h0, growth factors and #
@@ -117,7 +127,7 @@ module defcapsol
         hm(j)=hm(j+1)*ql
         zm(j)=-sum(hm(j+1:0))
     enddo
-    Z=-zm(js)
+   !  Z=-zm(js)
     !!	print*,l,m, zm(-l),zm(m);  do j=-l,m; write(333,*)j,zm(j),hm(j); enddo; stop
     !!do nLever=1,n ; if(r(nLever)>=RCant) exit; enddo;
     !!print '(a,F6.3,a)',  "      <<<<<<<<<<<<<<<<<<<<<<<<<<<<  Tip-Sample dist= " ,Z," nm >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
@@ -136,11 +146,20 @@ module defcapsol
     
     !================================================================== 
     
-    subroutine SetupProbe(n,m,l, h0, Rtip,theta,HCone,RCant, dCant, eps_r, Hsam, verbose)
+    subroutine SetupProbe(n,m,l, h0, Rtip, theta,HCone,RCant, dCant, eps_r, Hsam, verbose, &
+                          hn, r, hm, zm, ProbeBot, ProbeTop, b)
     real*8, INTENT(IN) :: h0, Rtip, theta, HCone, RCant, dCant, eps_r, Hsam
     integer, INTENT(IN) :: n, m, l, verbose
+    real(dp), dimension(0:n), INTENT(IN)  :: hn, r
+    real(dp), dimension(-l:m), INTENT(IN) :: hm, zm
+    integer, dimension(0:n), INTENT(OUT) :: ProbeBot, ProbeTop
+    real(dp), dimension(-l:m,0:n), INTENT(OUT) :: b
+    ! allocate (ProbeBot(0:n) , ProbeTop(0:n))
+
       ! Note: to keep the tip-geometry fixed, Cone Height is constant and it is the sample thickness that varies by separation
-    real*8 Ra , Rc , Ez2  
+    real*8 Ra , Rc , Ez2
+    integer      ::  i,j,k
+    
     Ra=Rtip*(1._dp-sin(theta))
     Rc=Rtip*cos(theta)
     b(:,:) =1.0 !free-to-vary points
@@ -233,20 +252,20 @@ module defcapsol
                         
     enddo
     endif
-    if(z<=d_min+h0/2) then
-       open(600,file='ProbeGeometry.dat')
-       write(600,*) " # rho, z,   i,  j,  code:  1=sphere, 2=cone, 3=cant, 4= edge"
-       Write(600,55)( r(i),zm(ProbeBot(i)),i,ProbeBot(i),1 , i=1        ,nApex )
-       Write(600,55)( r(i),zm(ProbeBot(i)),i,ProbeBot(i),2 , i=nApex+1  ,nCone )
-       Write(600,55)( r(i),zm(ProbeBot(i)),i,ProbeBot(i),3 , i=nCone+1  ,nLever)
-       Write(600,55)( r(i),zm(ProbeBot(i)),i,ProbeBot(i),4 , i=nLever+1 ,nEdge )
-       Write(600,55)( r(i),zm(ProbeTop(i)),i,ProbeTop(i),4 , i=nEdge, nLever+1,-1)
-       Write(600,55)( r(i),zm(ProbeTop(i)),i,ProbeTop(i),3 , i=nLever,nCone+1 ,-1)
-       Write(600,55)( r(i),zm(ProbeTop(i)),i,ProbeTop(i),2 , i=nCone ,nApex+1 ,-1)
-       Write(600,55)( r(i),zm(ProbeTop(i)),i,ProbeTop(i),1 , i=nApex      ,1 ,-1)
-       55 format(2e15.5 , 3i6)
-       close(600)
-    endif
+   !  if(z<=d_min+h0/2) then
+   !     open(600,file='ProbeGeometry.dat')
+   !     write(600,*) " # rho, z,   i,  j,  code:  1=sphere, 2=cone, 3=cant, 4= edge"
+   !     Write(600,55)( r(i),zm(ProbeBot(i)),i,ProbeBot(i),1 , i=1        ,nApex )
+   !     Write(600,55)( r(i),zm(ProbeBot(i)),i,ProbeBot(i),2 , i=nApex+1  ,nCone )
+   !     Write(600,55)( r(i),zm(ProbeBot(i)),i,ProbeBot(i),3 , i=nCone+1  ,nLever)
+   !     Write(600,55)( r(i),zm(ProbeBot(i)),i,ProbeBot(i),4 , i=nLever+1 ,nEdge )
+   !     Write(600,55)( r(i),zm(ProbeTop(i)),i,ProbeTop(i),4 , i=nEdge, nLever+1,-1)
+   !     Write(600,55)( r(i),zm(ProbeTop(i)),i,ProbeTop(i),3 , i=nLever,nCone+1 ,-1)
+   !     Write(600,55)( r(i),zm(ProbeTop(i)),i,ProbeTop(i),2 , i=nCone ,nApex+1 ,-1)
+   !     Write(600,55)( r(i),zm(ProbeTop(i)),i,ProbeTop(i),1 , i=nApex      ,1 ,-1)
+   !     55 format(2e15.5 , 3i6)
+   !     close(600)
+   !  endif
     
     if(verbose>1) then 
     If(SphereTest) then
@@ -343,11 +362,16 @@ module defcapsol
    !  end subroutine WriteOutputs
     
     !===============================================
-    subroutine IntegratedForce(n,m,l, Z, Rtip,theta,HCone,RCant, dCant, eps_r, Hsam)
+    subroutine IntegratedForce(n, m, l, Z, Rtip,theta,HCone,RCant, dCant, eps_r, Hsam, &
+         hn, r, hm, zm, ProbeBot)
     real*8, INTENT(IN) :: Z, Rtip, theta, HCone, RCant, dCant, eps_r, Hsam
     integer, INTENT(IN) :: n, m, l
+    real(dp), dimension(0:n), INTENT(IN)  :: hn, r
+    real(dp), dimension(-l:m), INTENT(IN) :: hm, zm
+    integer, dimension(0:n), INTENT(IN) :: ProbeBot
     real*8 E2,df
     character*200 str
+    integer      ::  i,j,k
     Force=0._dp
     write(str,'(a,f6.4)')"Fz.dat", Z/Rtip
     open (500, file=str)
@@ -378,6 +402,109 @@ module defcapsol
          call date_and_time(VALUES=v)
          write ( time, "(' Time: ',i2.2,'.',i2.2,'.',i4.4,i6.2,':',i2.2,':',i2.2)") , v(3),v(2),v(1),v(5:7)
     end subroutine
+
+
+
+
+    Subroutine make_hess(n, m, l, z_steps, eps_r, hn, r, hm, zm, b, hess)
+      implicit none
+      integer, INTENT(IN) :: n, m, l, z_steps
+      real*8, INTENT(IN) :: eps_r
+      real(dp), dimension(0:n), INTENT(IN)  :: hn, r
+      real(dp), dimension(-l:m), INTENT(IN) :: hm, zm
+      real(dp), dimension(-l:m,0:n), INTENT(IN) :: b
+      ! real*8, INTENT(IN) :: r(:), hn(:), hm(:)
+      real*8, dimension(0:min(m+ l + 1, n+1), (n+1)*( l + 1)), INTENT(OUT) :: hess
+
+
+      integer :: lmn, kdA, kdB, kd, ij
+      integer      ::  i,j,k ! Array indices
+
+
+      real*8, allocatable :: HA1(:), HA2(:), HA3(:)
+      real*8, allocatable :: HB1(:), HB2(:), HB3(:)
+      real*8, allocatable :: aa(:, :), bb(:, :), gp(:, :)
+
+      js=-z_steps;
+      
+      lmn=(n+1)*(l+m+1)
+      kdA=m+l+1 
+      kdB=n+1
+      kd=min(kdA,kdB)
+
+
+
+      allocate(HA1(lmn), HA2(lmn), HA3(lmn), HB1(lmn), HB2(lmn), HB3(lmn))
+      allocate (aa(-l:m,0:n),bb(-l:m,0:n),gp(0:n,-l:m)) 
+
+      do i=0,n-1
+         do j=js+1,m
+           aa(j,i)=.5_dp*(r(i)+r(i+1)) * hn(i) / hm(j)  ! r_bar * dr / dz
+           bb(j,i)=.5_dp*(r(i)+r(i+1)) / hn(i) * hm(j)  ! r_bar * dz / dr
+         enddo
+         do j=-l+1,js
+           aa(j,i)=.5_dp*(r(i)+r(i+1)) *hn(i) / hm(j)*eps_r ! r_bar * dr / dz * eps_r 
+           bb(j,i)=.5_dp*(r(i)+r(i+1)) /hn(i) * hm(j)*eps_r
+         enddo
+         enddo
+         
+         
+         do i=0,n ;do j=-l,m ;  ij=j+l+1+i*kdA
+            if(b(j,i)>0._dp) then 
+               HA1(ij)= aa(j,i) +bb(j,i)
+               if(i>0) HA1(ij)= HA1(ij)+bb(j,i-1)
+               if(j<m) HA1(ij)=HA1(ij)+ aa(j+1,i)  
+               HA2(ij)=0._dp
+               if(j<m) HA2(ij)=-aa(j+1,i)
+               HA3(ij)=-bb(j,i)
+           else ! on boundry ==> fixed potentional nodes
+              HA1(ij)=1._dp  !on diagonal
+              if(ij<lmn)    HA2(ij)      = 0._dp ! just belove diagonal
+              if(ij>1)      HA2(ij-1)    = 0._dp ! just left of diagonal
+              if(ij<lmn-kdA) HA3(ij)     = 0._dp ! far belove diagonal
+              if(ij>kdA)     HA3(ij-kdA) = 0._dp ! for left of diagonal
+           endif
+         enddo; enddo
+         
+         
+         do j=-l,m ;do i=0,n ; ij=i+1+(j+l)*kdB
+            if(b(j,i)>0._dp) then ! Variable coefficient...
+               HB1(ij)= aa(j,i) + bb(j,i) ! 
+               if(i>0) then
+                  HB1(ij) = HB1(ij) + bb(j,i-1)
+               endif
+               if(j<m) then
+                  HB1(ij) = HB1(ij)+ aa(j+1,i)
+               endif
+               HB3(ij)=0._dp; if(j<m)  HB3(ij)=-aa(j+1,i)
+               HB2(ij)=-bb(j,i)
+               HB2(ij)=-bb(j,i)
+           else ! on boundry ==> fixed potentional nodes
+              HB1(ij)=1._dp  !on diagonal
+             if(ij<lmn)      HB2(ij)    = 0._dp ! just belove diagonal
+             if(ij>1)        HB2(ij-1)  = 0._dp ! just left of diagonal
+              if(ij<lmn-kdB) HB3(ij)    = 0._dp ! far belove diagonal
+              if(ij>kdB)     HB3(ij-kdB)= 0._dp ! for left of diagonal
+           endif
+         enddo; enddo
+
+         if(kd==kdB) then 
+              Hess=0._dp 
+              Hess(0,:) = HB1  ! + 1.d-8
+              Hess(1,:) = HB2 
+              Hess(kd,:)= HB3
+         else
+              Hess=0._dp 
+              Hess(0,:) = HA1  ! + 1.d-8
+              Hess(1,:) = HA2 
+              Hess(kd,:)= HA3
+         endif
+      
+         DEALLOCATE (HA1, HA2, HA3, HB1, HB2, HB3)
+         deallocate (aa, bb, gp) 
+      
+   end subroutine
+
 end module defcapsol
     
     !=====================================================
@@ -397,7 +524,7 @@ end module defcapsol
    real*8 :: Z_unitless, theta
     integer*8 iter
     real(8) gnrm0 
-    integer l, ij, info ,lmn ,kd,kdA,kdB
+    integer i, j, k, l, ij, info ,lmn ,kd,kdA,kdB
     real*8 , allocatable :: gp(:,:)
     integer, allocatable :: ipiv(:)
     real*8 , allocatable :: HA1(:),HA2(:),HA3(:)
@@ -411,6 +538,11 @@ end module defcapsol
     real*8 Alpha, anoise , energy1  
     real*8 arrayC(4),zk
     real*8 , allocatable :: arrayE(:),arrayZ(:),arrayF(:)
+    real*8, allocatable :: hn(:), r(:), hm(:), zm(:)
+
+    integer, allocatable :: ProbeBot(:), ProbeTop(:)
+    real*8, allocatable :: b(:, :)
+
     integer iarray, idstep, ifn
     character*25 fn
     logical output
@@ -420,6 +552,7 @@ end module defcapsol
      INTEGER  idum, solver
      INTEGER maxfct, mnum, mtype,  nrhs,  msglvl 
      INTEGER iparm(64)
+     real*8 Z
      REAL*8  dparm(64) 
      INTEGER  , allocatable :: ia(:)
      INTEGER  , allocatable :: ja(:)
@@ -449,18 +582,20 @@ end module defcapsol
      lmn=(n+1)*(l+m+1) ; kdA=m+l+1;  kdB=n+1 ; kd=min(kdA,kdB)
     
      allocate (hn(0:n),r(0:n),hm(-l:m),zm(-l:m)) 
-     call GenerateGrid(n,m,l, h0, rho_max, Z_max, Rtip,theta,HCone,RCant, dCant, eps_r, Hsam, verbose)   
+     call GenerateGrid(n,m,l, h0, rho_max, Z_max, Rtip, theta, HCone, RCant, dCant, &
+     eps_r, Hsam, verbose, hn, r, hm, zm) 
     
      allocate (u(-l:m,0:n),g(-l:m,0:n),b(-l:m,0:n) ) ! uexact , u0
      allocate (ProbeBot(0:n) , ProbeTop(0:n))
-     call SetupProbe(n,m,l, h0, Rtip,theta,HCone,RCant, dCant, eps_r, Hsam, verbose)
+     call SetupProbe(n,m,l, h0, Rtip, theta,HCone,RCant, dCant, eps_r, Hsam, verbose, &
+     hn, r, hm, zm, ProbeBot, ProbeTop, b)
     
     
      allocate (aa(-l:m,0:n),bb(-l:m,0:n),gp(0:n,-l:m)) 
      allocate (HA1(lmn),HA2(lmn),HA3(lmn), Hd_1(lmn), HB1(lmn),HB2(lmn),HB3(lmn) , ipiv(lmn))
     
    !  if (Method ==  'LAPACK') 
-    if (Method == 'PARDISO') allocate (ia(lmn+1),ja(3*lmn-kdA-1),a(3*lmn-kdA-1) )
+   !  if (Method == 'PARDISO') allocate (ia(lmn+1),ja(3*lmn-kdA-1),a(3*lmn-kdA-1) )
     
           
     
@@ -531,16 +666,15 @@ end module defcapsol
          Hess(1,:) = HA2 
          Hess(kd,:)= HA3
        endif
-       HessNorm=0._dp
-       do i=1,lmn   
-             x=abs(Hess(0,i))+abs(Hess(1,i))+abs(Hess(kd,i))
-             if(i>1) x=x+abs(Hess(1,i-1))
-             if(i>kd) x=x+abs(Hess(kd,i-kd))
-             if(x>HessNorm) HessNorm=x
-       enddo
-      !  if(verbose>1) then
-      !    print *, "LBOUND is ", LBOUND(Hess), " UBOUND ", UBOUND(Hess)
-      !  endif
+       
+      !  HessNorm=0._dp
+      !  do i=1,lmn   
+      !        x=abs(Hess(0,i))+abs(Hess(1,i))+abs(Hess(kd,i))
+      !        if(i>1) x=x+abs(Hess(1,i-1))
+      !        if(i>kd) x=x+abs(Hess(kd,i-kd))
+      !        if(x>HessNorm) HessNorm=x
+      !  enddo
+
 
          print *, 'Matrix factorization  by LAPACK ...' 
          call dpbtrf( 'L', lmn,kd,Hess,kd+1,info)
@@ -560,44 +694,44 @@ end module defcapsol
     
     ! _ Hessian ___________
     
-    elseif  (Method == 'PARDISO') then
-           ij=0
-           do k=1,lmn 
-             ij=ij+1; 
-             ia(k)=ij ! ia(k) = k, so the first are 
-             ja(ij)=k ! Same...
-             a(ij)=HA1(k) ! 
+   !  elseif  (Method == 'PARDISO') then
+   !         ij=0
+   !         do k=1,lmn 
+   !           ij=ij+1; 
+   !           ia(k)=ij ! ia(k) = k, so the first are 
+   !           ja(ij)=k ! Same...
+   !           a(ij)=HA1(k) ! 
            
-           if(k<lmn) then 
-             ij=ij+1
-             ja(ij)=k+1
-             a(ij)=HA2(k)
-           endif
+   !         if(k<lmn) then 
+   !           ij=ij+1
+   !           ja(ij)=k+1
+   !           a(ij)=HA2(k)
+   !         endif
          
-           if(k<= lmn -kdA) then 
-           ij=ij+1
-           ja(ij)=k+kdA
-            a(ij)=HA3(k)
-           endif
-         enddo
-         ia(lmn+1)=ij+1 
-         mtype =2  ! 2 for symmetric positive definite mantrix  , -2 for symmetrtic indefinite 
-         solver=  0  ! use sparse direct method
-         maxfct=1
-         mnum=1
-         nrhs=1
-         call pardisoinit(pt, mtype, iparm)
-       !   print*, 'pt is ', pt
-          iparm(6) = 1  !  0=> output on x  , 1 => output on b
-          ! iparm(3) = 1   !  .. Numbers of Processors ( value of OMP_NUM_THREADS )
-          iparm(8)  = 1   ! max numbers of iterative refinement steps
-          msglvl    = 1      ! with statistical information
-         print *, 'Matrix factorization ... by PARDISO' 
-          phase    = 13  ! Analysis, Numerical Factorization, Solve, Iterative Refinent
-          call pardiso (pt, maxfct, mnum, mtype, phase, lmn, a, ia, ja,  idum, nrhs, iparm, msglvl, g, gp, info) 
-       if(info /= 0) then
-          print*, info , 'Failure in factorization a matrix by PARDISO' , info  ;  stop
-       endif
+   !         if(k<= lmn -kdA) then 
+   !         ij=ij+1
+   !         ja(ij)=k+kdA
+   !          a(ij)=HA3(k)
+   !         endif
+   !       enddo
+   !       ia(lmn+1)=ij+1 
+   !       mtype =2  ! 2 for symmetric positive definite mantrix  , -2 for symmetrtic indefinite 
+   !       solver=  0  ! use sparse direct method
+   !       maxfct=1
+   !       mnum=1
+   !       nrhs=1
+   !       call pardisoinit(pt, mtype, iparm)
+   !     !   print*, 'pt is ', pt
+   !        iparm(6) = 1  !  0=> output on x  , 1 => output on b
+   !        ! iparm(3) = 1   !  .. Numbers of Processors ( value of OMP_NUM_THREADS )
+   !        iparm(8)  = 1   ! max numbers of iterative refinement steps
+   !        msglvl    = 1      ! with statistical information
+   !       print *, 'Matrix factorization ... by PARDISO' 
+   !        phase    = 13  ! Analysis, Numerical Factorization, Solve, Iterative Refinent
+   !        call pardiso (pt, maxfct, mnum, mtype, phase, lmn, a, ia, ja,  idum, nrhs, iparm, msglvl, g, gp, info) 
+   !     if(info /= 0) then
+   !        print*, info , 'Failure in factorization a matrix by PARDISO' , info  ;  stop
+   !     endif
     
     ! Since now, a(1:3lmn-kd-1) in factorized form
     
@@ -654,19 +788,19 @@ end module defcapsol
                enddo
         enddo
     !_____________________________________________________________________________________
-    ELSEIF (Method=='PARDISO') THEN 
-      if (iter<2) gnrm0=gnrm
-          phase    = 33  ! Solve, Iterative Refinent
-        CALL pardiso (pt, maxfct, mnum, mtype, phase, lmn, a, ia, ja,  idum, nrhs, iparm, msglvl, g, gp, info) 
+   !  ELSEIF (Method=='PARDISO') THEN 
+   !    if (iter<2) gnrm0=gnrm
+   !        phase    = 33  ! Solve, Iterative Refinent
+   !      CALL pardiso (pt, maxfct, mnum, mtype, phase, lmn, a, ia, ja,  idum, nrhs, iparm, msglvl, g, gp, info) 
           
-       if(info  /= 0) then
-          print*, info , 'Failure in Solving a by PARDISO' , info  ;  stop
-       endif
-             do i=0, n-1
-                do j=-l,m
-                       u(j,i)=u(j,i)-Alpha*g(j,i); 
-                enddo
-             enddo
+   !     if(info  /= 0) then
+   !        print*, info , 'Failure in Solving a by PARDISO' , info  ;  stop
+   !     endif
+   !           do i=0, n-1
+   !              do j=-l,m
+   !                     u(j,i)=u(j,i)-Alpha*g(j,i); 
+   !              enddo
+   !           enddo
     
     !_____________________________________________________________________________________
     ELSEIF (Method=='CROSS') THEN ! use tridiag. H
@@ -708,7 +842,8 @@ end module defcapsol
     ! _________End of minimization _____________________________________________
     
     
-    call IntegratedForce(n,m,l, Z, Rtip,theta,HCone,RCant, dCant, eps_r, Hsam)
+    call IntegratedForce(n, m, l, Z, Rtip,theta,HCone,RCant, dCant, eps_r, Hsam, &
+    hn, r, hm, zm, ProbeBot)
     !write(* ,'(a,f5.2,3i5,2e,f10.2 , i3 )')    ' FINAL Z,n,m,l,Energy & Force, cpu time: , Iter',Z,n,m,l,energy*pi_e0,Force*pi_e0 , t/60 , Iter
    !  write(* ,'(a,f9.4,e15.7 )')    ' ===S/R,C/pi.e0.R:',Z/Rtip,2_dp*energy/Rtip 
    !  write(* ,'(60x,a,f5.2,e15.7,f10.2 )')    ' +++Separation,Capacitance, cpu time: ',Z,2_dp*energy*pi_e0 ,  t
@@ -732,10 +867,10 @@ end module defcapsol
     C_unitless = 2._dp*energy/Rtip 
 
 
-    if(Method=='PARDISO') then
-       phase = -1 
-     CALL pardiso (pt, maxfct, mnum, mtype, phase, lmn, a, ia, ja,  idum, nrhs, iparm, msglvl, g,gp ,  info) 
-    endif
+   !  if(Method=='PARDISO') then
+   !     phase = -1 
+   !   CALL pardiso (pt, maxfct, mnum, mtype, phase, lmn, a, ia, ja,  idum, nrhs, iparm, msglvl, g,gp ,  info) 
+   !  endif
     
      deallocate (hn,r,hm,zm) 
      deallocate (u,g,b ) ! uexact , u0
@@ -747,5 +882,5 @@ end module defcapsol
     if (Method == 'PARDISO') deallocate (ia,ja,a)
     
     1000 continue ! end of minimization
-    end
+    end subroutine
     

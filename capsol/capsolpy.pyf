@@ -6,31 +6,15 @@ python module capsolpy ! in
         module defcapsol ! in :capsolpy:CapSolPy.f90
             integer, parameter,optional :: dp=kind(1.d0)
             real(kind=8), parameter,optional :: pi=3.141592653589793238462643383279502884197_dp
-            real(kind=8), parameter,optional :: e0=8.854187817620d-3
-            real(kind=8), parameter,optional,depend(pi,e0) :: pi_e0=pi*e0
-            real(kind=8) :: d_min
-            real(kind=8) :: d_max
-            real(kind=8) :: z
-            real(kind=8) :: qn
-            real(kind=8) :: qm
-            real(kind=8) :: ql
-            real(kind=8), allocatable,dimension(:) :: hn
-            real(kind=8), allocatable,dimension(:) :: r
-            real(kind=8), allocatable,dimension(:) :: hm
-            real(kind=8), allocatable,dimension(:) :: zm
+            real(kind=8), parameter,optional :: e0=8.854187817620e-3_dp
+            real(kind=8), parameter,optional, depend(pi,e0) :: pi_e0=0.027816251401339236
             real(kind=8), allocatable,dimension(:,:) :: u
             real(kind=8), allocatable,dimension(:,:) :: g
-            integer, allocatable,dimension(:) :: probebot
-            integer, allocatable,dimension(:) :: probetop
-            real, allocatable,dimension(:,:) :: b
             integer :: napex
             integer :: ncone
             integer :: nlever
             integer :: nedge
             integer :: js
-            integer :: i
-            integer :: j
-            integer :: k
             real(kind=8) :: energy
             real(kind=8) :: gnrm
             real(kind=8) :: x
@@ -40,7 +24,7 @@ python module capsolpy ! in
             real(kind=8) :: force
             logical :: spheretest
             logical :: leveronlytest
-            subroutine generategrid(n,m,l,h0,rho_max,z_max,rtip,theta,hcone,rcant,dcant,eps_r,hsam,verbose) ! in :capsolpy:CapSolPy.f90:defcapsol
+            subroutine generategrid(n,m,l,h0,rho_max,z_max,rtip,theta,hcone,rcant,dcant,eps_r,hsam,verbose,hn,r,hm,zm) ! in :capsolpy:CapSolPy.f90:defcapsol
                 integer intent(in) :: n
                 integer intent(in) :: m
                 integer intent(in) :: l
@@ -55,9 +39,13 @@ python module capsolpy ! in
                 real*8 intent(in) :: eps_r
                 real*8 intent(in) :: hsam
                 integer intent(in) :: verbose
+                real(kind=dp) dimension(n + 1),intent(out),depend(n) :: hn
+                real(kind=dp) dimension(n + 1),intent(out),depend(n) :: r
+                real(kind=dp) dimension(m+l+1),intent(out),depend(m,l) :: hm
+                real(kind=dp) dimension(m+l+1),intent(out),depend(m,l) :: zm
             end subroutine generategrid
-            subroutine setupprobe(n,m,l,h0,rtip,theta,hcone,rcant,dcant,eps_r,hsam,verbose) ! in :capsolpy:CapSolPy.f90:defcapsol
-                integer intent(in) :: n
+            subroutine setupprobe(n,m,l,h0,rtip,theta,hcone,rcant,dcant,eps_r,hsam,verbose,hn,r,hm,zm,probebot,probetop,b) ! in :capsolpy:CapSolPy.f90:defcapsol
+                integer, optional,intent(in),check((len(hn)-1)>=n),depend(hn) :: n=(len(hn)-1)
                 integer intent(in) :: m
                 integer intent(in) :: l
                 real*8 intent(in) :: h0
@@ -69,9 +57,16 @@ python module capsolpy ! in
                 real*8 intent(in) :: eps_r
                 real*8 intent(in) :: hsam
                 integer intent(in) :: verbose
+                real(kind=dp) dimension(n + 1),intent(in) :: hn
+                real(kind=dp) dimension(n + 1),intent(in),depend(n) :: r
+                real(kind=dp) dimension(m+l+1),intent(in),depend(m,l) :: hm
+                real(kind=dp) dimension(m+l+1),intent(in),depend(m,l) :: zm
+                integer dimension(n + 1),intent(out),depend(n) :: probebot
+                integer dimension(n + 1),intent(out),depend(n) :: probetop
+                real(kind=dp) dimension(m+l+1,n + 1),intent(out),depend(m,l,n) :: b
             end subroutine setupprobe
-            subroutine integratedforce(n,m,l,z,rtip,theta,hcone,rcant,dcant,eps_r,hsam) ! in :capsolpy:CapSolPy.f90:defcapsol
-                integer intent(in) :: n
+            subroutine integratedforce(n,m,l,z,rtip,theta,hcone,rcant,dcant,eps_r,hsam,hn,r,hm,zm,probebot) ! in :capsolpy:CapSolPy.f90:defcapsol
+                integer, optional,intent(in),check((len(hn)-1)>=n),depend(hn) :: n=(len(hn)-1)
                 integer intent(in) :: m
                 integer intent(in) :: l
                 real*8 intent(in) :: z
@@ -82,10 +77,28 @@ python module capsolpy ! in
                 real*8 intent(in) :: dcant
                 real*8 intent(in) :: eps_r
                 real*8 intent(in) :: hsam
+                real(kind=dp) dimension(n + 1),intent(in) :: hn
+                real(kind=dp) dimension(n + 1),intent(in),depend(n) :: r
+                real(kind=dp) dimension(m+l+1),intent(in),depend(m,l) :: hm
+                real(kind=dp) dimension(m+l+1),intent(in),depend(m,l) :: zm
+                integer dimension(n + 1),intent(in),depend(n) :: probebot
             end subroutine integratedforce
             subroutine get_time(time) ! in :capsolpy:CapSolPy.f90:defcapsol
                 character*50 :: time
             end subroutine get_time
+            subroutine make_hess(n,m,l,z_steps,eps_r,hn,r,hm,zm,b,hess) ! in :capsolpy:CapSolPy.f90:defcapsol
+                integer, optional,intent(in),check((len(hn)-1)>=n),depend(hn) :: n=(len(hn)-1)
+                integer intent(in) :: m
+                integer intent(in) :: l
+                integer intent(in) :: z_steps
+                real*8 intent(in) :: eps_r
+                real(kind=dp) dimension(n + 1),intent(in) :: hn
+                real(kind=dp) dimension(n + 1),intent(in),depend(n) :: r
+                real(kind=dp) dimension(m+l+1),intent(in),depend(m,l) :: hm
+                real(kind=dp) dimension(m+l+1),intent(in),depend(m,l) :: zm
+                real(kind=dp) dimension(m+l+1,n + 1),intent(in),depend(m,l,n) :: b
+                real*8 dimension(min(m+ l + 1, n+1)+1,(n+1)*( l + 1)),intent(out),depend(n,m,l,n,l) :: hess
+            end subroutine make_hess
         end module defcapsol
         subroutine capsolcyl(n,m,l_js,h0,rho_max,z_max,d_steps,rtip,theta_deg,hcone,rcant,dcant,eps_r,hsam,method_in,test,verbose,c_unitless,hess) ! in :capsolpy:CapSolPy.f90
             use defcapsol
@@ -107,8 +120,7 @@ python module capsolpy ! in
             integer intent(in) :: test
             integer intent(in) :: verbose
             real*8 intent(out) :: c_unitless
-            ! lmn=(n+1)*(l+m+1) ; kdA=m+l+1;  kdB=n+1 ; kd=min(kdA,kdB)
-            real*8 dimension(0:min(m+ l_js + d_steps + 1, n+1), (n+1)*( l_js + d_steps  + m + 1)), intent(out) :: hess
+            real*8 dimension(min(m+ l_js + d_steps + 1, n+1)+1,(n+1)*( l_js + d_steps + 1)),intent(out),depend(n,m,l_js,d_steps,n,l_js,d_steps) :: hess
         end subroutine capsolcyl
     end interface 
 end python module capsolpy
