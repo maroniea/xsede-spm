@@ -25,10 +25,13 @@ rcant=15000.0,
 dcant=500.0,
 eps_r=5.0,
 hsam=10,
-method_in='LAPACK',
+method_in='NOSOLVE',
 test=0,
 verbose=2
 )
 
 
 c_unitless, hess = capsolpy.capsolcyl(**params) # Pass a dictionary of parameters
+
+
+print(hess.shape)
