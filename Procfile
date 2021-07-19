@@ -1,1 +1,1 @@
-web: sh setup.sh && streamlit run STREAMLIT_FILE
+web: sh setup.sh && streamlit run output/outputstreamlit.py
