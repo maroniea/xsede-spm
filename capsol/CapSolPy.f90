@@ -168,6 +168,7 @@ module defcapsol
     b(m,:)=0.  ! and top
     b(:,n)=0.  ! and side walls
     
+    ! u needs a size / dimension!
     ! initial guess for potential: 0 everywhere else on tip
     u=0._dp 
     ! tip geometry (u(tip)=1, b(tip)=0)
@@ -468,7 +469,7 @@ module defcapsol
          
          
          do j=-l,m ;do i=0,n ; ij=i+1+(j+l)*kdB
-            if(b(j,i)>0._dp) then ! Variable coefficient...
+            if(b(j,i)>0._dp) then ! 1 means that the potential can vary...
                HB1(ij)= aa(j,i) + bb(j,i) ! 
                if(i>0) then
                   HB1(ij) = HB1(ij) + bb(j,i-1)
