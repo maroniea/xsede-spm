@@ -521,7 +521,7 @@ endif
  allocate (aa(-l:m,0:n),bb(-l:m,0:n),gp(0:n,-l:m)) 
  allocate (HA1(lmn),HA2(lmn),HA3(lmn), Hd_1(lmn), HB1(lmn),HB2(lmn),HB3(lmn) , ipiv(lmn))
 
-if (Method ==  'LAPACK') allocate (Hess(0:kd,lmn))
+if (Method ==  'LAPACK') allocate (Hess(0:kd,lmn)) ! Is this because of the banding?
 if (Method == 'PARDISO') allocate (ia(lmn+1),ja(3*lmn-kdA-1),a(3*lmn-kdA-1) )
 
       
