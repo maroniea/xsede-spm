@@ -19,8 +19,8 @@ r_alpha= st.number_input(label = "Alpha", value= 0.2 )
 
 models = {'RC': dict(Rsample=1E12, Csample=4e-14)}
 
-models = {'RC': dict(parameters= dict(Rsample=1E12, Csample=4e-14),
-                        image=''}
+# models = {'RC': dict(parameters= dict(Rsample=1E12, Csample=4e-14),
+                        # image=
 
 
 selected_model = st.selectbox("Sample Model", list(models.keys()))
