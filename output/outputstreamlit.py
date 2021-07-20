@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 st.title("Connecting impedance model to Capsol Simulations")
 
 # Add nice heading for cantilever
-st.image(r"IMG_9163.jpg", width=300)
+st.image(r"output/IMG_9163.jpg", width=300)
 k_cantilever = st.number_input(label="k_cantilever N/m" ,  value=3.5)
 f0 = st.number_input(label= "Resonance Frequency (Fc) Hz" , value= 66500)
 
