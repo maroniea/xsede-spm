@@ -1,4 +1,6 @@
+from typing import Dict
 import streamlit as st
+import numpy as np
 html = """
   <style>
     /* Disable overlay (fullscreen mode) buttons */
@@ -50,4 +52,37 @@ st.button("Show", key="2")
 st.markdown('</div>', unsafe_allow_html= True)
 if RC:
     st.session_state.model=RC
+st.text("Circuit chosen:" + str(st.session_state.model))
+
+from dataclasses import dataclass, field
+@dataclass
+class RCModel:
+  name: str = "RC"
+  image_fname: str =""
+  params: dict=field(default_factory=lambda : dict(Rsample=1e12, Csample=1e-15))
+  def Z(self, f):
+    s= 1j*f*(2*np.pi)
+    z= 1/(1/self.params["Rsample"] + s*self.params["Csample"])
+    return z
+
+@dataclass
+class Series_ResistanceModel:
+  name: str = "Series Resistance"
+  image_fname: str =""
+  params: dict=field(default_factory=lambda : dict(Rsample=1e12, Rseries=1e12 ,Csample=1e-15))
+  def Z(self, f):
+    s= 1j*f*(2*np.pi)
+    z= 1/(1/self.params["Rsample"] + s*self.params["Csample"]) + self.params["Rseries"]
+    return z
+
+models=[RCModel(), Series_ResistanceModel()]
+models[1].params
+
+buttons= {}
+for model in models:
+  buttons[model.name]=(st.button(f'Select {model.name}'))
+
+for button_name, button in buttons.items():
+  if button:
+    st.session_state.model= button_name
 st.text("Circuit chosen:" + str(st.session_state.model))
