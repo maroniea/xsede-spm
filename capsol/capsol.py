@@ -324,7 +324,9 @@ class CapSol:
 
         self.energy_z = 0.5 * np.sum(dV * E_field(self.u, self.r, self.z).imag**2) * 1e-9 * 8.854e-12
 
-        return self.energy # In SI Units...
+        self.c=self.energy*2
+
+        return self.c # In SI Units...
 
     def __repr__(self):
         return f"CapSol(params={repr(self.params)})"
