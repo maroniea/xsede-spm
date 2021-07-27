@@ -6,6 +6,7 @@ from scipy import linalg
 from scipy import sparse
 from scipy.sparse import linalg as la
 from tqdm import tqdm
+import newanalyzecapsol as nac
 
 from dataclasses import dataclass
 
@@ -344,3 +345,9 @@ def Totalsim(params, dmin, dmax, istep, fname):
         capacitances.append(sim.c)
     np.savetxt(fname, np.c_[distances, capacitances], header='distance (nm) Capacitances(F)', footer=f'Totalsim(params={params}, dmin={dmin}, dmax={dmax}, istep={istep}, fname={fname})')
     return distances, capacitances
+
+def runnewcapsol(input_fname= "capsol.in", output_fname="C-Z.dat"):
+    gp=nac.get_gridparameters(input_fname)
+    params=Params(Rtip=gp["Rtip"], theta_deg=gp["half-angle"],Hcone=gp["HCone"], Hcant=gp["thickness_Cantilever"], Rcant=gp["RCantilever"], zMax=gp["z_max"],rhoMax=gp["rho_max"], h0=gp["h0"], d=gp["min"], Nuni=gp["Nuni"], Nr=gp["n"], Nz_plus=gp["m+"],hsam=gp["Thickness_sample"])
+    totalsim=Totalsim(params, gp["min"], gp["max"], gp["istep"], output_fname)
+    return totalsim

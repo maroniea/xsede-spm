@@ -17,4 +17,4 @@
 1.700000000000000000e+01 1.213596201360314952e-14
 1.800000000000000000e+01 1.213531340064381832e-14
 1.900000000000000000e+01 1.213467087774502637e-14
-# Totalsim(params=Params(Rtip=20.0, theta_deg=15.0, Hcone=15000.0, Hcant=500.0, Rcant=40000.0, zMax=1000000.0, rhoMax=1000000.0, h0=0.5, d=19.0, Nuni=50, Nr=500, Nz_plus=500, hsam=0.5, theta=0.2617993877991494), dmin=2.0, dmax=20.0, istep=2.0, fname=D-C.dat)
+# Totalsim(params=Params(Rtip=20.0, theta_deg=15.0, Hcone=15000.0, Hcant=500.0, Rcant=40000.0, zMax=1000000.0, rhoMax=1000000.0, h0=0.5, d=19.0, Nuni=50, Nr=500, Nz_plus=500, hsam=0.5, theta=0.2617993877991494), dmin=2.0, dmax=20.0, istep=2.0, fname=output_fname)
