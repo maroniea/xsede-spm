@@ -18,8 +18,12 @@ module definitions
       real(dp)     :: Rtip,RCant,HCone,dCant,theta
       real(dp)     :: eps_r, Hsam 
 ! tip-sample separation: loops from s)min to d_max
-      real(dp)     :: d_min,d_max,Z 
+      real(dp)     :: d_min,d_max,Z
 
+      
+      integer :: Nuni ! Uniformly spaced data points in the +z and rho directions
+      logical :: sample_equally_spaced ! Whether the sample data points should be equally spaced
+                                       ! If true, this will override l
 ! simulation parameters
       real(dp)     :: h0,rho_max,Z_max   ! finest grid spacing and simulation box size (truncation lengths)
       real(dp)     :: qn,qm,ql   ! growth factors 
@@ -42,7 +46,6 @@ module definitions
 contains
 
 subroutine GenerateGrid  !  __ generates  a non-uniform grid  _______________
-integer Nuni ! number of points in the uniform region
 real(dp) q
 ! growth factors are determined according to h0, # of grid-points and box sizes
 ! Alternatively, one can determine # according to known growth factors, h0 and box sizes
@@ -51,7 +54,7 @@ real(dp) q
 ! of point-grids that works with the users specific machine-memory is used to find the smallest possible growth factors.
 
 
-Nuni=50  ! 
+
 do i=0,Nuni-1 
     r(i)=h0*i
     hn(i)=h0
@@ -435,12 +438,15 @@ write(*,*)
 str='capsol.in'
 open(unit=10,file=str) 
 verbose=-1
+Nuni=1 ! Default from previous version of capsol
+sample_equally_spaced=.FALSE. ! Default to non-equally spaced data points
 read(10,*,end=99)  n,m,l_js
 read(10,*,end=99)  h0,rho_max,z_max
 read(10,*,end=99)  d_min,d_max,idstep
 read(10,*,end=99)  Rtip,theta,HCone,RCant, dCant
 read(10,*,end=99)  eps_r,Hsam 
 read(10,*,end=99)  Method, test, verbose
+read(10,*, end=99) Nuni, sample_equally_spaced
 !write(*,'(t50," # ")') Alpha, anoise
 99 close(10)
 Alpha=1_dp
@@ -457,6 +463,8 @@ if(verbose==-1) then
    write(11,'(2EN12.3,t50," # Sample: eps_r, Thickness_sample")') 5., .5 !eps_r,Hsam 
    write(11,'(a, i5, i3,t50," # Solving: Method{LAPACK,PARDISO,NOSOLVE}, Test?(0=No,1=Sphere,2=lever-only),Verbosiy>0)")') &
            'LAPACK', 0, 0 !, trim(Method), test, verbose 
+   write(11, '(i5, L7, " # New grid params: Uniformly spaced points, equally spaced sample grid?")') &
+               1, .FALSE. ! Default values
    close(11)
    stop
 endif
@@ -476,6 +484,8 @@ write(*,'(2F6.1,3EN12.2,t50," # Probe shape: Rtip,half-angle,HCone,RCantilever, 
 write(*,'(2EN12.3,t50," # Sample: eps_r, Thickness_sample")') eps_r,Hsam 
 write(*,'(a, i5, i3,t50," # Solving: Method{LAPACK,PARDISO,NOSOLVE}, Test?(0=No,1=Sphere,2=lever-only),Verbosiy>0)")') &
            , trim(Method), test, verbose 
+write(*, '(i5, L7, " # New grid params: Uniformly spaced points, equally spaced sample grid?")') &
+           Nuni, sample_equally_spaced ! Default values
 !write(*,*) "=========================== "
 write(*,*)                                                       
 write(*,*)                                                       
