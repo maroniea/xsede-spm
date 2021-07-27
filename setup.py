@@ -11,4 +11,5 @@ setup(name='capsolpy',
       install_requires=[
           'tqdm',
       ],
+      scripts=['bin/capsol_from_file.py'],
       zip_safe=False)
