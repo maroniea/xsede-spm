@@ -8,5 +8,5 @@ else:
     fname = sys.argv[1]
 
 print("Capsol Py")
-print(f"Running Emily's new capsol function on {fname}")
+capsol.runnewcapsol(fname)
 print("Exiting...")
