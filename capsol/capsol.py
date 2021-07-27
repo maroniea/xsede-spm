@@ -6,7 +6,7 @@ from scipy import linalg
 from scipy import sparse
 from scipy.sparse import linalg as la
 from tqdm import tqdm
-import newanalyzecapsol as nac
+import capsol.newanalyzecapsol as nac
 
 from dataclasses import dataclass
 
