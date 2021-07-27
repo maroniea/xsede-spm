@@ -269,7 +269,11 @@ class Params:
     Nr : int = 500
     Nz_plus : int = 500
     hsam : float = 0.0 # No sample thickness for now...
-    theta : float = theta_deg * np.pi/180
+
+    
+    @property
+    def theta(self) -> float:
+         return self.theta_deg * np.pi/180
 
 
 

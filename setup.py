@@ -8,4 +8,8 @@ setup(name='capsolpy',
       author_email='maroniea2023@mountunion.edu, dwyerry@mountunion.edu',
       license='MIT',
       packages=['capsol'],
+      install_requires=[
+          'tqdm',
+      ],
+      scripts=['bin/capsol_from_file.py'],
       zip_safe=False)
