@@ -26,14 +26,14 @@ def get_gridparameters(f_name):
     line_4 = contents[3]
     line_5 = contents[4]
     line_6 = contents[5]
-    line_7= contents[6]
+    
     line_list1= line_1.split()
     line_list2= line_2.split()
     line_list3= line_3.split()
     line_list4= line_4.split()
     line_list5= line_5.split()
     line_list6= line_6.split()
-    line_list7=line_7.split()
+    
     params["n"]=(int(line_list1[0])) 
     params["m+"]=(int(line_list1[1]))
     params["m-"]=(int(line_list1[2]))
@@ -53,11 +53,22 @@ def get_gridparameters(f_name):
     params["Solving Method"]=((line_list6[0]))
     params["Test"]=(int(line_list6[1]))
     params["Verbosity"]= (int(line_list6[2]))
-    params["Nuni"]=(int(line_list7[0]))
-    if line_list7[1]=="T":
-        params["Equally spaced"]=True
-    else:
-        params["Equally spaced"]=False
+
+    try:
+        line_7= contents[6]
+        line_list7=line_7.split()
+        if len(line_list7) == 0:
+            raise ValueError
+        params["Nuni"]=(int(line_list7[0]))
+        if line_list7[1]=="T":
+            params["Equally spaced"]=True
+        else:
+            params["Equally spaced"]=False
+    except:
+        # Defaults if the old capsol input file (without Nuni, equally spaced)
+        # was used
+        params['Nuni'] = 1
+        params['Equally spaced'] = False
     return(params) 
     #units in nm 
 
