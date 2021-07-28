@@ -3,12 +3,15 @@
 # streamlit run make_simulation.py
 
 # Imports go at the top...
+from re import T
 import streamlit as st
 import numpy as np
 import os
 import copy
 import glob
 import itertools
+
+from streamlit.proto.Checkbox_pb2 import Checkbox
 import SessionState 
 
 
@@ -42,12 +45,19 @@ def folder_selector(label="Select a file", folder_path='.'):
 
 
 def write_inputfile(p):
+
+    # if p{["Equally spaced"]}:
+    #    es="Equally spaced"=True
+    #    es==T
+    # else:
+    #     "Equally spaced" = False
     return f"""   {p['n']}  {p['m+']}   {p['m-']}                                # Number of grids: n, m+, m-
   {p['h0']}   {p['rho_max']}    {p['z_max']}                   # Resolution: h0, Box-size: Rho_max, Z_max    *** ALL LENGTHS IN NANOMETER *** 
      {p['min']}    {p['max']}   {p['istep']}                         # Tip-sample separation: min, max, istep (stepsize=istep*h0)
   {p['Rtip']}  {p['half-angle']}  {p['HCone']}  {p['RCantilever']}  {p['thickness_Cantilever']}  # Probe shape: Rtip,half-angle,HCone,RCantilever, thickness_Cantilever
    {p['eps_r']}      {p['Thickness_sample']}                             # Sample: eps_r, Thickness_sample
-   LAPACK  {p['Test']}  {p['Verbosity']} """
+   LAPACK  {p['Test']}  {p['Verbosity']} 
+   {p['Nuni']}  {str(p['Equally spaced'])[0]}"""
 
 state = SessionState.get(folder=os.path.abspath('.'))
 
@@ -75,7 +85,9 @@ default_params = {'n': 500,
  'eps_r': 3.0,
  'Thickness_sample': 10.0,
  'Test': 0,
- 'Verbosity': 0}
+ 'Verbosity': 0,
+ 'Nuni': 1,
+ 'Equally spaced': False}
 
 # Infer from the default values
 parameter_types = {key: type(val) for key, val in default_params.items()}
@@ -101,6 +113,8 @@ for key, val in default_params.items():
                             value=val, step=1, 
                             format=formatter(
                                 parameter_types[key]))
+    elif parameter_types[key]==bool:
+        updated_default_params[key] = st.checkbox(key, value=val)
     else:
         updated_default_params[key] = st.number_input(key,
                             value=val,
@@ -110,7 +124,7 @@ for key, val in default_params.items():
 
 st.markdown("## Setup Scans")
 
-n_scans = st.number_input("Number of experimental scans:", 1, 5, 1 )
+n_scans = st.number_input("Number of experimental scans:", 1, 5, 1, 1)
 
 n_simulations = [] # The number of simulations for each scan
 n_parameters = [] # The number of parameters varied in each scan

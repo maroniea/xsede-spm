@@ -63,16 +63,21 @@ def get_gridparameters(f_name):
 
 
 
-def process_data(params, data, smoothing= False, std=5*10**-9):
-    z_over_r= data[: , 0]
-    r= params['Rtip']
-    z= (z_over_r*r)
+def process_data(params, data, smoothing= False, std=5*10**-9, fortran=True):
+    if fortran:
+        z_over_r= data[: , 0]
+        r= params['Rtip']
+        z= (z_over_r*r)
+
+
+        c_over_pie0R= data[:, 2]
+        e0= 8.854E-12 
+        c= (c_over_pie0R*np.pi*e0*r)*10**-9
+    else: 
+        z=data[:, 0]
+        c=data[:, 1]
 
     dz= (z[1]-z[0])*10**-9
-    c_over_pie0R= data[:, 1]
-    e0= 8.854E-12 
-    c= (c_over_pie0R*np.pi*e0*r)*10**-9
-
     if smoothing:
          N_sigma = int(std/dz) #standard deviation in data points
          gaussian_smoothing= signal.gaussian(6*N_sigma, N_sigma)
