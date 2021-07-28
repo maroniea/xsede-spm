@@ -10,8 +10,8 @@ import os
 import copy
 import glob
 import itertools
+import capsol.capsol as cap
 
-from streamlit.proto.Checkbox_pb2 import Checkbox
 import SessionState 
 
 
@@ -170,6 +170,19 @@ for i in range(n_scans):
                                 ) for j in range(n_sim)])
 
     all_params_values.append([{param: val for param, val in zip(params, val_row)} for val_row in zip(*values)])
+
+st.markdown("## Grid information")
+gp = all_params_values[0]
+params=cap.Params(Rtip=gp["Rtip"], theta_deg=gp["half-angle"],Hcone=gp["HCone"], Hcant=gp["thickness_Cantilever"], Rcant=gp["RCantilever"],
+                   zMax=gp["z_max"],rhoMax=gp["rho_max"], h0=gp["h0"], d=gp["min"], Nuni=gp["Nuni"],
+                    Nr=gp["n"], Nz_plus=gp["m+"],hsam=gp["Thickness_sample"])
+
+sim = cap.CapSol(params)
+st.markdown("Both ratios should be about 1.01 at most.")
+st.markdown(f"R_ratio = {sim.r_ratio} (increase n to improve)")
+st.markdown(f"Z_ratio =  {sim.z_ratio} (increase m+ to improve)")
+
+
 
 st.header("Output information")
 
