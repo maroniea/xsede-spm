@@ -172,7 +172,12 @@ for i in range(n_scans):
     all_params_values.append([{param: val for param, val in zip(params, val_row)} for val_row in zip(*values)])
 
 st.markdown("## Grid information")
-gp = all_params_values[0]
+simulation_inputs = [merge_dicts(dicts) for dicts in itertools.product(*all_params_values)]
+
+# For loop here!
+# for i, sim in enumerate(simulation_inputs):
+gp = copy.copy(updated_default_params)
+gp.update(simulation_inputs[0]) # Assign nsew parameter values...
 params=cap.Params(Rtip=gp["Rtip"], theta_deg=gp["half-angle"],Hcone=gp["HCone"], Hcant=gp["thickness_Cantilever"], Rcant=gp["RCantilever"],
                    zMax=gp["z_max"],rhoMax=gp["rho_max"], h0=gp["h0"], d=gp["min"], Nuni=gp["Nuni"],
                     Nr=gp["n"], Nz_plus=gp["m+"],hsam=gp["Thickness_sample"])
