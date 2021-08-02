@@ -7,6 +7,7 @@ from scipy import sparse
 from scipy.sparse import linalg as la
 from tqdm import tqdm
 import capsol.newanalyzecapsol as nac
+from datetime import datetime as dt
 
 from dataclasses import dataclass
 
@@ -340,14 +341,20 @@ class CapSol:
 def Totalsim(params, dmin, dmax, istep, fname):
     capacitances=[]
     distances=np.arange(dmin, dmax, istep*params.h0)
+    print(distances)
     for d in tqdm(distances):
+        start_time= dt.now()
         params.d= d
         sim = CapSol(params)
         sim.setup_matrices()
         sim.solve()
         sim.process()
         capacitances.append(sim.c)
+        end_time=dt.now()
+        elapsed_time= end_time-start_time
+        print(elapsed_time)
     np.savetxt(fname, np.c_[distances, capacitances], header='distance (nm) Capacitances(F)', footer=f'Totalsim(params={params}, dmin={dmin}, dmax={dmax}, istep={istep}, fname={fname})')
+
     return distances, capacitances
 
 def runnewcapsol(input_fname= "capsol.in", output_fname="C-Z.dat"):
