@@ -338,14 +338,76 @@ class CapSol:
     def __repr__(self):
         return f"CapSol(params={repr(self.params)})"
 
-def Totalsim(params, dmin, dmax, istep, fname):
+class SphereTest:
+    def __init__(self, params: Params):
+        self.params = params
+        self.r, self.r_ratio = guni_grid(params.Nuni, params.Nr, params.h0, params.rhoMax)
+        self.z_plus, self.z_ratio = guni_grid(params.Nuni, params.Nz_plus,
+                                                params.h0, params.zMax)
+        
+        self.z_minus = generate_gapsam_grid(params.h0, params.hsam, params.d)
+
+        # Make the final, overall, z grid:
+        self.z = np.r_[self.z_minus, self.z_plus]
+
+        self.R, self.Z = np.meshgrid(self.r, self.z)
+
+        self.spm_tip = sphere(self.R, self.Z, self.params.Rtip)
+                        
+        
+        self.Nr = len(self.r)
+        self.Nz = len(self.z)
+
+        self.outer_boundary = boundary_radial(self.Nr, self.Nz)
+
+        self.boundary = self.spm_tip.ravel() + self.outer_boundary
+
+        self.u = np.zeros_like(self.R)
+        self.u[self.spm_tip] = 1.0
+
+    
+    def setup_matrices(self):
+        self.A = poisson_variable_spacing_radial(self.r, self.z)
+
+        self.f = -self.A @ self.u.ravel()
+
+        self.A_free = self.A[~self.boundary].T[~self.boundary].T
+
+        self.f_free = self.f[~self.boundary]
+    
+    def solve(self):
+        u_cut = la.spsolve(self.A_free, self.f_free)
+        self.u = self.u.ravel()
+        self.u[~self.boundary] = u_cut
+        self.u = self.u.reshape((self.Nz, self.Nr))
+
+
+    def process(self):
+        self.dV = dV =  grid_area(self.r, self.z)
+
+        self.energy = 0.5 * np.sum(dV * abs(E_field(self.u, self.r, self.z))**2) * 1e-9 * 8.854e-12
+
+        self.energy_z = 0.5 * np.sum(dV * E_field(self.u, self.r, self.z).imag**2) * 1e-9 * 8.854e-12
+
+        self.c=self.energy*2
+
+        return self.c # In SI Units...
+
+    def __repr__(self):
+        return f"CapSol(params={repr(self.params)})"
+
+def Totalsim(params, dmin, dmax, istep, fname, Test=0):
     capacitances=[]
     distances=np.arange(dmin, dmax, istep*params.h0)
     print(distances)
+   
     for d in tqdm(distances):
         start_time= dt.now()
         params.d= d
-        sim = CapSol(params)
+        if Test==1:
+            sim=SphereTest(params)
+        else:
+           sim=CapSol(params) 
         sim.setup_matrices()
         sim.solve()
         sim.process()
@@ -353,12 +415,12 @@ def Totalsim(params, dmin, dmax, istep, fname):
         end_time=dt.now()
         elapsed_time= end_time-start_time
         print(elapsed_time)
-    np.savetxt(fname, np.c_[distances, capacitances], header='distance (nm) Capacitances(F)', footer=f'Totalsim(params={params}, dmin={dmin}, dmax={dmax}, istep={istep}, fname={fname})')
+    np.savetxt(fname, np.c_[distances, capacitances], header='distance (nm) Capacitances(F)', footer=f'Totalsim(params={params}, dmin={dmin}, dmax={dmax}, istep={istep}, fname={fname}), Test={Test}')
 
     return distances, capacitances
 
 def runnewcapsol(input_fname= "capsol.in", output_fname="C-Z.dat"):
     gp=nac.get_gridparameters(input_fname)
     params=Params(Rtip=gp["Rtip"], theta_deg=gp["half-angle"],Hcone=gp["HCone"], Hcant=gp["thickness_Cantilever"], Rcant=gp["RCantilever"], zMax=gp["z_max"],rhoMax=gp["rho_max"], h0=gp["h0"], d=gp["min"], Nuni=gp["Nuni"], Nr=gp["n"], Nz_plus=gp["m+"],hsam=gp["Thickness_sample"])
-    totalsim=Totalsim(params, gp["min"], gp["max"], gp["istep"], output_fname)
+    totalsim=Totalsim(params, gp["min"], gp["max"], gp["istep"], output_fname, gp["Test"])
     return totalsim
