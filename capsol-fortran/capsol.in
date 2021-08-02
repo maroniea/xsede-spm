@@ -3,5 +3,5 @@
      2.000    20.000   2                          # Tip-sample separation: min, max, istep (stepsize=istep*h0)
   20.0  15.0   15.00E+03   40.00E+03  500.00E+00  # Probe shape: Rtip,half-angle,HCone,RCantilever, thickness_Cantilever
    5.000E+00 500.000E-03                          # Sample: eps_r, Thickness_sample
-LAPACK    0  0                                    # Solving: Method{LAPACK,PARDISO,NOSOLVE}, Test?(0=No,1=Sphere,2=lever-only),Verbosiy>0)
+LAPACK    1  0                                  # Solving: Method{LAPACK,PARDISO,NOSOLVE}, Test?(0=No,1=Sphere,2=lever-only),Verbosiy>0)
     50      F # New grid params: Uniformly spaced points, equally spaced sample grid?
