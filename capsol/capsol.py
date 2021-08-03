@@ -235,7 +235,7 @@ def poisson_variable_spacing_radial_faster(x, y):
 def grid_area(r, z):
     # Area of each grid element is 2 * np.pi * 
     dr2 = np.diff(r**2)
-    return 2 * np.pi *  np.diff(z).reshape((-1, 1)) @ dr2.reshape((1, -1))
+    return np.pi *  np.diff(z).reshape((-1, 1)) @ dr2.reshape((1, -1))
 
 def E_field(u, r, z):
     """
