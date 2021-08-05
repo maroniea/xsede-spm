@@ -16,10 +16,15 @@ from dataclasses import dataclass
 
 # 
 def sphere(r, z, Rtip):
-    """Check if data points are in the tip sphere."""
+    """Check if grid points are in the tip sphere.
+    
+    Parameters:
+    
+    r: """
     return (r**2 + (z - Rtip)**2) <= Rtip**2
 
 def cone(r, z, Rtip, theta, hcone):
+    """Check if grid points are in the tip cone."""
     return np.where(np.logical_and(z >= Rtip, z<hcone), r <= (Rtip + (z - Rtip)*np.sin(theta)), False)
 
 def body(r, z, hcone, dcant, rcant):
@@ -28,6 +33,31 @@ def body(r, z, hcone, dcant, rcant):
 def sample(z, n_sample):
     n, m = z.shape
     return np.s_[1:1+n_sample, :]
+
+def epsilon_z(z, d, eps_r):
+    """Returns epsilon_r(z) defined on the staggered grid.
+    
+    Ex: For d = 1.0 nm, a grid spaced every 0.5 nm, and eps_r = 3.0, we have
+
+    z_ind    z                  epsz_ind     eps_z
+    0       -2.0 -----------    
+                                    0          3.0 
+    1       -1.5 -- sample --
+                                    1          3.0
+    2       -1.0 ------------
+                                    2          1.0
+    3        -0.5 -- vaccuum --
+                                    3          1.0
+    4           0 -------------     
+                        tip         
+    
+
+    Note that the array returned is always 1 shorter than the input array of z values.
+    """
+    tol = 1e-8 # Add a small margin for rounding error
+    return np.where(z <= (-d+tol), eps_r, 1.0)[:-1]
+
+
 
 def geometric_sum(r, a1, n):
     return sum(np.array([a1 * r ** i for i in range(1, n + 1)]))
@@ -181,6 +211,9 @@ class arrayBuilder:
         self.cols.append(col)
         self.data.append(val)
 
+# This function should build the sparse matrix A faster, but currently seems
+# to have an error in it? The matrix is different than the
+# matrix produced by `poisson_variable_spacing_radial`
 def poisson_variable_spacing_radial_faster(x, y):
     Nx = len(x)
     Ny = len(y)
@@ -233,7 +266,14 @@ def poisson_variable_spacing_radial_faster(x, y):
 
 
 def grid_area(r, z):
-    # Area of each grid element is 2 * np.pi * 
+    """
+    Parameters:
+    
+    r : 1d array of radii
+    z : 1d array of z coordinates
+    
+    Returns the area of each grid cell (with z in rows, r in columns)."""
+    # Area of each grid element is π * (R_outer^2 - R_inner^2) * (Δz) 
     dr2 = np.diff(r**2)
     return np.pi *  np.diff(z).reshape((-1, 1)) @ dr2.reshape((1, -1))
 
