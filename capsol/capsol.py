@@ -55,7 +55,7 @@ def epsilon_z(z, d, eps_r):
     Note that the array returned is always 1 shorter than the input array of z values.
     """
     tol = 1e-8 # Add a small margin for rounding error
-    return np.where(z <= (-d+tol), eps_r, 1.0)[:-1]
+    return np.where(z[1:] <= (-d+tol), eps_r, 1.0)
 
 
 
@@ -200,6 +200,63 @@ def poisson_variable_spacing_radial(x, y):
     
     return sparse.csr_matrix(A) # Convert to better format for usage
 
+def poisson_variable_spacing_radial_samp(r, y, eps_z):
+    Nr = len(r)
+    Ny = len(y)
+    hr = np.diff(r)
+    hy = np.diff(y)
+    # Define eps_z on the same grid as the voltage (eps_z uses the staggered grid)
+    eps_z_grid = np.r_[0.5+eps_z[0]*0.5, 0.5*(eps_z[1:]+eps_z[:-1]), 0.5+eps_z[-1]*0.5]
+    A = sparse.lil_matrix((Nr*Ny, Nr*Ny))
+    for i in range(Ny):
+        for j in range(Nr): # Radial
+            ind = i * Nr + j # This point
+            irp = ind + 1    # +r 
+            irn = ind - 1    # -r
+            iyp = (i+1)*Nr + j  # +y
+            iyn = (i-1)*Nr + j  # -y
+            
+            
+            Dr_plus = hr[j] if j < (Nr-1) else 0.0
+            Dr_minus = hr[j-1] if j > 0 else hr[j]
+            r0 = r[j]
+            eps_r = eps_z_grid[i] # Grab our estimate of eps_r at the grid boundary...
+            eps_p = eps_z[i] if i < (Ny-1) else 1.0
+            eps_m = eps_z[i-1] if i > 0 else 1.0
+            Dy_plus = hy[i] if i < (Ny-1) else 0.0
+            Dy_minus = hy[i-1] if i > 0 else 0.0
+            
+            prefactor_r = 4/((Dr_plus+Dr_minus)*(Dr_plus**2 + Dr_minus**2))
+            
+            # This is different I think...
+            # At the boundary, we need a different approximation...
+            if (i > 0) and i < (Ny-1):
+                prefactor_y = 2/((Dy_plus+Dy_minus) * Dy_minus * Dy_plus)
+            else:
+                prefactor_y = 4/((Dy_plus+Dy_minus)*(Dy_plus**2 + Dy_minus**2))
+
+            
+            A[ind, ind] = (Dr_plus+Dr_minus) * prefactor_r * eps_r + (eps_m*Dy_plus+eps_p*Dy_minus) * prefactor_y
+            if j == 0:
+                A[ind, irp] = -2 * Dr_minus * prefactor_r * eps_r # That's it, no radial derivative here...
+            elif j < (Nr - 1):
+                A[ind, irp] = -1 * Dr_minus * prefactor_r * eps_r - eps_r / (r0 * (Dr_plus+Dr_minus))
+            
+                
+            
+            if j > 0:
+                A[ind, irn] = -eps_r * Dr_plus * prefactor_r + eps_r / (r0 * (Dr_plus+Dr_minus))
+            
+            if j == (Nr - 1):
+                A[ind, ind] += -eps_r / (r0 * (Dr_plus+Dr_minus)) # 1st order difference uses the grid point here...
+
+            if i > 0:
+                A[ind, iyn] = -1 * Dy_plus * eps_m * prefactor_y
+            if i < (Ny-1):
+                A[ind, iyp] = -1 * Dy_minus * eps_p * prefactor_y
+    
+    return sparse.csr_matrix(A) # Convert to better format for usage
+
 class arrayBuilder:
     def __init__(self, estimated_size=None):
         self.rows = []
@@ -316,6 +373,29 @@ class Params:
     def theta(self) -> float:
          return self.theta_deg * np.pi/180
 
+@dataclass
+class ParamsSample:
+    Rtip : float = 20.0
+    theta_deg : float = 15.0
+    Hcone : float = 15000.0
+    Hcant : float = 500.0
+    Rcant : float = 15000.0
+    zMax : float = Rtip*1000.0
+    rhoMax : float = Rtip*1000.0
+    h0 : float = Rtip * 0.02
+    d : float = Rtip
+    Nuni : int = 50 # Uniformly spaced points in the r and z_plus directions
+    Nr : int = 500
+    Nz_plus : int = 500
+    hsam : float = 1.0
+    eps_r : float = 3.0
+    equally_spaced_sample : bool = True
+
+    
+    @property
+    def theta(self) -> float:
+         return self.theta_deg * np.pi/180
+
 
 
 class CapSol:
@@ -374,9 +454,102 @@ class CapSol:
         self.c=self.energy*2
 
         return self.c # In SI Units...
+    
+    def run(self):
+        print("Grids:")
+        print(f"r_ratio = {self.r_ratio:.3f}, z_ratio = {self.z_ratio:.3f}")
+        print("Setting up matrices:")
+        self.setup_matrices()
+        print("Solving...")
+        self.solve()
+        self.process()
+        print(f"C = {self.c:.5e} F")
+        print("Done!")
 
     def __repr__(self):
         return f"CapSol(params={repr(self.params)})"
+
+
+
+class CapSolSample:
+    def __init__(self, params: ParamsSample):
+        self.params = params
+        self.r, self.r_ratio = guni_grid(params.Nuni, params.Nr, params.h0, params.rhoMax)
+        self.z_plus, self.z_ratio = guni_grid(params.Nuni, params.Nz_plus,
+                                                params.h0, params.zMax)
+        
+        if params.equally_spaced_sample:
+            self.z_minus = generate_gapsam_grid(params.h0, params.hsam, params.d)
+        else:
+            raise ValueError("Non-equally spaced sample points not yet implemented.")
+
+        # Make the final, overall, z grid:
+        self.z = np.r_[self.z_minus, self.z_plus]
+
+        self._setup_grid_and_boundary()
+
+
+    def _setup_grid_and_boundary(self):
+        params = self.params
+        self.eps_z = epsilon_z(self.z, self.params.d, self.params.eps_r)
+
+        self.R, self.Z = np.meshgrid(self.r, self.z)
+
+        self.spm_tip = (sphere(self.R, self.Z, self.params.Rtip) +
+                        cone(self.R, self.Z, params.Rtip, params.theta, params.Hcone) +
+                        body(self.R, self.Z, params.Hcone, params.Hcant, params.Rcant)
+                        )
+        
+        self.Nr = len(self.r)
+        self.Nz = len(self.z)
+
+        self.outer_boundary = boundary_radial(self.Nr, self.Nz)
+
+        self.boundary = self.spm_tip.ravel() + self.outer_boundary
+
+        self.u = np.zeros_like(self.R)
+        self.u[self.spm_tip] = 1.0
+
+    def setup_matrices(self):
+        self.A = poisson_variable_spacing_radial_samp(self.r, self.z, self.eps_z)
+
+        self.f = -self.A @ self.u.ravel()
+
+        self.A_free = self.A[~self.boundary].T[~self.boundary].T
+
+        self.f_free = self.f[~self.boundary]
+    
+    def solve(self):
+        u_cut = la.spsolve(self.A_free, self.f_free)
+        self.u = self.u.ravel()
+        self.u[~self.boundary] = u_cut
+        self.u = self.u.reshape((self.Nz, self.Nr))
+
+
+    def process(self):
+        self.dV = dV =  grid_area(self.r, self.z)
+
+        self.energy = 0.5 * np.sum(dV * self.eps_z.reshape((-1, 1)) * abs(E_field(self.u, self.r, self.z))**2) * 1e-9 * 8.854e-12
+
+        self.energy_z = 0.5 * np.sum(dV * self.eps_z.reshape((-1, 1)) * E_field(self.u, self.r, self.z).imag**2) * 1e-9 * 8.854e-12
+
+        self.c=self.energy*2
+
+        return self.c # In SI Units...
+
+    def run(self):
+        print("Grids:")
+        print(f"r_ratio = {self.r_ratio:.3f}, z_ratio = {self.z_ratio:.3f}")
+        print("Setting up matrices:")
+        self.setup_matrices()
+        print("Solving...")
+        self.solve()
+        self.process()
+        print(f"C = {self.c:.5e} F")
+        print("Done!")
+
+    def __repr__(self):
+        return f"CapSolSample(params={repr(self.params)})"
 
 class SphereTest:
     def __init__(self, params: Params):
@@ -432,6 +605,96 @@ class SphereTest:
         self.c=self.energy*2
 
         return self.c # In SI Units...
+    
+    def run(self):
+        print("Grids:")
+        print(f"r_ratio = {self.r_ratio:.3f}, z_ratio = {self.z_ratio:.3f}")
+        print("Setting up matrices:")
+        self.setup_matrices()
+        print("Solving...")
+        self.solve()
+        self.process()
+        print(f"C = {self.c:.5e} F")
+        print("Done!")
+
+    def __repr__(self):
+        return f"CapSol(params={repr(self.params)})"
+
+
+class SphereTestSample:
+    def __init__(self, params: ParamsSample):
+        self.params = params
+        self.r, self.r_ratio = guni_grid(params.Nuni, params.Nr, params.h0, params.rhoMax)
+        self.z_plus, self.z_ratio = guni_grid(params.Nuni, params.Nz_plus,
+                                                params.h0, params.zMax)
+        
+        if params.equally_spaced_sample:
+            self.z_minus = generate_gapsam_grid(params.h0, params.hsam, params.d)
+        else:
+            raise ValueError("Non-equally spaced sample points not yet implemented.")
+
+        # Make the final, overall, z grid:
+        self.z = np.r_[self.z_minus, self.z_plus]
+
+        self._setup_grid_and_boundary()
+
+
+    def _setup_grid_and_boundary(self):
+        params = self.params
+        self.eps_z = epsilon_z(self.z, self.params.d, self.params.eps_r)
+
+        self.R, self.Z = np.meshgrid(self.r, self.z)
+
+        self.spm_tip = sphere(self.R, self.Z, self.params.Rtip)
+        
+        self.Nr = len(self.r)
+        self.Nz = len(self.z)
+
+        self.outer_boundary = boundary_radial(self.Nr, self.Nz)
+
+        self.boundary = self.spm_tip.ravel() + self.outer_boundary
+
+        self.u = np.zeros_like(self.R)
+        self.u[self.spm_tip] = 1.0
+
+    
+    def setup_matrices(self):
+        self.A = poisson_variable_spacing_radial_samp(self.r, self.z, self.eps_z)
+
+        self.f = -self.A @ self.u.ravel()
+
+        self.A_free = self.A[~self.boundary].T[~self.boundary].T
+
+        self.f_free = self.f[~self.boundary]
+    
+    def solve(self):
+        u_cut = la.spsolve(self.A_free, self.f_free)
+        self.u = self.u.ravel()
+        self.u[~self.boundary] = u_cut
+        self.u = self.u.reshape((self.Nz, self.Nr))
+
+
+    def process(self):
+        self.dV = dV =  grid_area(self.r, self.z)
+
+        self.energy = 0.5 * np.sum(dV * self.eps_z.reshape((-1, 1)) * abs(E_field(self.u, self.r, self.z))**2) * 1e-9 * 8.854e-12
+
+        self.energy_z = 0.5 * np.sum(dV * self.eps_z.reshape((-1, 1)) * E_field(self.u, self.r, self.z).imag**2) * 1e-9 * 8.854e-12
+
+        self.c=self.energy*2
+
+        return self.c # In SI Units...
+
+    def run(self):
+        print("Grids:")
+        print(f"r_ratio = {self.r_ratio:.3f}, z_ratio = {self.z_ratio:.3f}")
+        print("Setting up matrices:")
+        self.setup_matrices()
+        print("Solving...")
+        self.solve()
+        self.process()
+        print(f"C = {self.c:.5e} F")
+        print("Done!")
 
     def __repr__(self):
         return f"CapSol(params={repr(self.params)})"

@@ -1,5 +1,6 @@
 import numpy as np
 import math
+import capsol.capsol as cp
 
 
 from numpy import (pi, sinh, cosh, tanh, arccosh,
@@ -29,6 +30,8 @@ def sphereMetalCap(Rtip, d):
     alpha = np.arccosh(1 + d/Rtip)
     return (4 * np.pi * epsilon_0 * Rtip * sum_sinh(alpha))
 
+def sphereCapParams(params : cp.ParamsSample) -> float:
+    return sphereCap(params.Rtip*1e-9, params.d*1e-9, params.eps_r, params.hsam*1e-9)
 
 def coth(x):
     """The hyperpolic cotanget of x."""
