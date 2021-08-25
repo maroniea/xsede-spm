@@ -6,6 +6,8 @@ from scipy import linalg
 from scipy import sparse
 from scipy.sparse import linalg as la
 from tqdm import tqdm
+import time
+import copy
 import capsol.newanalyzecapsol as nac
 from datetime import datetime as dt
 
@@ -236,26 +238,222 @@ def poisson_variable_spacing_radial_samp(r, y, eps_z):
                 prefactor_y = 4/((Dy_plus+Dy_minus)*(Dy_plus**2 + Dy_minus**2))
 
             
+            # Smallest index first...
+            if i > 0:
+                A[ind, iyn] = -1 * Dy_plus * eps_m * prefactor_y
+
+            # Second index...
+            if j > 0:
+                A[ind, irn] = -eps_r * Dr_plus * prefactor_r + eps_r / (r0 * (Dr_plus+Dr_minus))
+
+            # On the diagonal next...
+
             A[ind, ind] = (Dr_plus+Dr_minus) * prefactor_r * eps_r + (eps_m*Dy_plus+eps_p*Dy_minus) * prefactor_y
+            if j == (Nr - 1):
+                A[ind, ind] += -eps_r / (r0 * (Dr_plus+Dr_minus)) # 1st order difference uses the grid point here...
+
             if j == 0:
                 A[ind, irp] = -2 * Dr_minus * prefactor_r * eps_r # That's it, no radial derivative here...
             elif j < (Nr - 1):
                 A[ind, irp] = -1 * Dr_minus * prefactor_r * eps_r - eps_r / (r0 * (Dr_plus+Dr_minus))
-            
-                
-            
-            if j > 0:
-                A[ind, irn] = -eps_r * Dr_plus * prefactor_r + eps_r / (r0 * (Dr_plus+Dr_minus))
-            
-            if j == (Nr - 1):
-                A[ind, ind] += -eps_r / (r0 * (Dr_plus+Dr_minus)) # 1st order difference uses the grid point here...
 
-            if i > 0:
-                A[ind, iyn] = -1 * Dy_plus * eps_m * prefactor_y
             if i < (Ny-1):
                 A[ind, iyp] = -1 * Dy_minus * eps_p * prefactor_y
     
     return sparse.csr_matrix(A) # Convert to better format for usage
+
+
+def poisson_var_rad_samp_fast(r, y, eps_z):
+    Nr = len(r)
+    Ny = len(y)
+    hr = np.diff(r)
+    hy = np.diff(y)
+    # Define eps_z on the same grid as the voltage (eps_z uses the staggered grid)
+    eps_z_grid = np.r_[0.5+eps_z[0]*0.5, 0.5*(eps_z[1:]+eps_z[:-1]), 0.5+eps_z[-1]*0.5]
+    A = arrayBuilderInd()
+    for i in range(Ny):
+        for j in range(Nr): # Radial
+            ind = i * Nr + j # This point
+            irp = ind + 1    # +r 
+            irn = ind - 1    # -r
+            iyp = (i+1)*Nr + j  # +y
+            iyn = (i-1)*Nr + j  # -y
+            
+            
+            Dr_plus = hr[j] if j < (Nr-1) else 0.0
+            Dr_minus = hr[j-1] if j > 0 else hr[j]
+            r0 = r[j]
+            eps_r = eps_z_grid[i] # Grab our estimate of eps_r at the grid boundary...
+            eps_p = eps_z[i] if i < (Ny-1) else 1.0
+            eps_m = eps_z[i-1] if i > 0 else 1.0
+            Dy_plus = hy[i] if i < (Ny-1) else 0.0
+            Dy_minus = hy[i-1] if i > 0 else 0.0
+            
+            prefactor_r = 4/((Dr_plus+Dr_minus)*(Dr_plus**2 + Dr_minus**2))
+            
+            # This is different I think...
+            # At the boundary, we need a different approximation...
+            if (i > 0) and i < (Ny-1):
+                prefactor_y = 2/((Dy_plus+Dy_minus) * Dy_minus * Dy_plus)
+            else:
+                prefactor_y = 4/((Dy_plus+Dy_minus)*(Dy_plus**2 + Dy_minus**2))
+
+            
+            # Smallest index first...
+            if i > 0:
+                A[ind, iyn] = -1 * Dy_plus * eps_m * prefactor_y
+
+            # Second index...
+            if j > 0:
+                A[ind, irn] = -eps_r * Dr_plus * prefactor_r + eps_r / (r0 * (Dr_plus+Dr_minus))
+
+            # On the diagonal next...
+
+            A[ind, ind] = (Dr_plus+Dr_minus) * prefactor_r * eps_r + (eps_m*Dy_plus+eps_p*Dy_minus) * prefactor_y
+            if j == (Nr - 1):
+                A[ind, ind] = -eps_r / (r0 * (Dr_plus+Dr_minus)) # 1st order difference uses the grid point here...
+
+            if j == 0:
+                A[ind, irp] = -2 * Dr_minus * prefactor_r * eps_r # That's it, no radial derivative here...
+            elif j < (Nr - 1):
+                A[ind, irp] = -1 * Dr_minus * prefactor_r * eps_r - eps_r / (r0 * (Dr_plus+Dr_minus))
+
+            if i < (Ny-1):
+                A[ind, iyp] = -1 * Dy_minus * eps_p * prefactor_y
+    
+    return sparse.csr_matrix(sparse.coo_matrix((A.data, (A.rows, A.cols)), shape=(Nr*Ny, Nr*Ny))) # Convert to better format for usage
+
+
+def _poisson_var_rad_samp_fast(r, y, eps_z):
+    Nr = len(r)
+    Ny = len(y)
+    hr = np.diff(r)
+    hy = np.diff(y)
+    # Define eps_z on the same grid as the voltage (eps_z uses the staggered grid)
+    eps_z_grid = np.r_[0.5+eps_z[0]*0.5, 0.5*(eps_z[1:]+eps_z[:-1]), 0.5+eps_z[-1]*0.5]
+    A = arrayBuilderInd()
+    for i in range(Ny):
+        for j in range(Nr): # Radial
+            ind = i * Nr + j # This point
+            irp = ind + 1    # +r 
+            irn = ind - 1    # -r
+            iyp = (i+1)*Nr + j  # +y
+            iyn = (i-1)*Nr + j  # -y
+            
+            
+            Dr_plus = hr[j] if j < (Nr-1) else 0.0
+            Dr_minus = hr[j-1] if j > 0 else hr[j]
+            r0 = r[j]
+            eps_r = eps_z_grid[i] # Grab our estimate of eps_r at the grid boundary...
+            eps_p = eps_z[i] if i < (Ny-1) else 1.0
+            eps_m = eps_z[i-1] if i > 0 else 1.0
+            Dy_plus = hy[i] if i < (Ny-1) else 0.0
+            Dy_minus = hy[i-1] if i > 0 else 0.0
+            
+            prefactor_r = 4/((Dr_plus+Dr_minus)*(Dr_plus**2 + Dr_minus**2))
+            
+            # This is different I think...
+            # At the boundary, we need a different approximation...
+            if (i > 0) and i < (Ny-1):
+                prefactor_y = 2/((Dy_plus+Dy_minus) * Dy_minus * Dy_plus)
+            else:
+                prefactor_y = 4/((Dy_plus+Dy_minus)*(Dy_plus**2 + Dy_minus**2))
+
+            
+            # Smallest index first...
+            if i > 0:
+                A[ind, iyn] = -1 * Dy_plus * eps_m * prefactor_y
+
+            # Second index...
+            if j > 0:
+                A[ind, irn] = -eps_r * Dr_plus * prefactor_r + eps_r / (r0 * (Dr_plus+Dr_minus))
+
+            # On the diagonal next...
+
+            A[ind, ind] = (Dr_plus+Dr_minus) * prefactor_r * eps_r + (eps_m*Dy_plus+eps_p*Dy_minus) * prefactor_y
+            if j == (Nr - 1):
+                A[ind, ind] = -eps_r / (r0 * (Dr_plus+Dr_minus)) # 1st order difference uses the grid point here...
+
+            if j == 0:
+                A[ind, irp] = -2 * Dr_minus * prefactor_r * eps_r # That's it, no radial derivative here...
+            elif j < (Nr - 1):
+                A[ind, irp] = -1 * Dr_minus * prefactor_r * eps_r - eps_r / (r0 * (Dr_plus+Dr_minus))
+
+            if i < (Ny-1):
+                A[ind, iyp] = -1 * Dy_minus * eps_p * prefactor_y
+    
+    return A
+
+
+def _poisson_finish(r, y, eps_z, A_old, params):
+    N_samp = int(np.round(params.d/params.h0))
+    i_max = (params.Nz_plus + N_samp - 1)
+    ind = (i_max) * params.Nr # Use this as the cutoff..
+    imax = np.argmax(np.array(A_old.rows) >= ind)
+    s = slice(imax)
+    A = arrayBuilderInd()
+    A.rows = copy.copy(A_old.rows[s])
+    A.cols = copy.copy(A_old.cols[s])
+    A.data = copy.copy(A_old.data[s])
+    Nr = len(r)
+    Ny = len(y)
+    hr = np.diff(r)
+    hy = np.diff(y)
+    # Define eps_z on the same grid as the voltage (eps_z uses the staggered grid)
+    eps_z_grid = np.r_[0.5+eps_z[0]*0.5, 0.5*(eps_z[1:]+eps_z[:-1]), 0.5+eps_z[-1]*0.5]
+    for i in range(i_max, Ny): # Start near the bottom of the gap region...
+        for j in range(Nr): # Radial
+            ind = i * Nr + j # This point
+            irp = ind + 1    # +r 
+            irn = ind - 1    # -r
+            iyp = (i+1)*Nr + j  # +y
+            iyn = (i-1)*Nr + j  # -y
+            
+            
+            Dr_plus = hr[j] if j < (Nr-1) else 0.0
+            Dr_minus = hr[j-1] if j > 0 else hr[j]
+            r0 = r[j]
+            eps_r = eps_z_grid[i] # Grab our estimate of eps_r at the grid boundary...
+            eps_p = eps_z[i] if i < (Ny-1) else 1.0
+            eps_m = eps_z[i-1] if i > 0 else 1.0
+            Dy_plus = hy[i] if i < (Ny-1) else 0.0
+            Dy_minus = hy[i-1] if i > 0 else 0.0
+            
+            prefactor_r = 4/((Dr_plus+Dr_minus)*(Dr_plus**2 + Dr_minus**2))
+            
+            # This is different I think...
+            # At the boundary, we need a different approximation...
+            if (i > 0) and i < (Ny-1):
+                prefactor_y = 2/((Dy_plus+Dy_minus) * Dy_minus * Dy_plus)
+            else:
+                prefactor_y = 4/((Dy_plus+Dy_minus)*(Dy_plus**2 + Dy_minus**2))
+
+            
+            # Smallest index first...
+            if i > 0:
+                A[ind, iyn] = -1 * Dy_plus * eps_m * prefactor_y
+
+            # Second index...
+            if j > 0:
+                A[ind, irn] = -eps_r * Dr_plus * prefactor_r + eps_r / (r0 * (Dr_plus+Dr_minus))
+
+            # On the diagonal next...
+
+            A[ind, ind] = (Dr_plus+Dr_minus) * prefactor_r * eps_r + (eps_m*Dy_plus+eps_p*Dy_minus) * prefactor_y
+            if j == (Nr - 1):
+                A[ind, ind] = -eps_r / (r0 * (Dr_plus+Dr_minus)) # 1st order difference uses the grid point here...
+
+            if j == 0:
+                A[ind, irp] = -2 * Dr_minus * prefactor_r * eps_r # That's it, no radial derivative here...
+            elif j < (Nr - 1):
+                A[ind, irp] = -1 * Dr_minus * prefactor_r * eps_r - eps_r / (r0 * (Dr_plus+Dr_minus))
+
+            if i < (Ny-1):
+                A[ind, iyp] = -1 * Dy_minus * eps_p * prefactor_y
+    
+    return A
+
+    
 
 class arrayBuilder:
     def __init__(self, estimated_size=None):
@@ -268,9 +466,25 @@ class arrayBuilder:
         self.cols.append(col)
         self.data.append(val)
 
-# This function should build the sparse matrix A faster, but currently seems
-# to have an error in it? The matrix is different than the
-# matrix produced by `poisson_variable_spacing_radial`
+class arrayBuilderInd:
+    def __init__(self, estimated_size=None):
+        self.rows = []
+        self.cols = []
+        self.data = []
+
+    def __setitem__(self, rowcol, val):
+        self.rows.append(rowcol[0])
+        self.cols.append(rowcol[1])
+        self.data.append(val)
+    
+
+    def to_csr(self, shape=None):
+        return sparse.csr_matrix(sparse.coo_matrix((self.data, (self.rows, self.cols)), shape=shape))
+
+
+
+
+# All good! It is the same...
 def poisson_variable_spacing_radial_faster(x, y):
     Nx = len(x)
     Ny = len(y)
@@ -282,7 +496,10 @@ def poisson_variable_spacing_radial_faster(x, y):
             ind = i * Nx + j # This point
             ixp = ind + 1    # +x 
             ixn = ind - 1    # -x
+
+            # Goes last...
             iyp = (i+1)*Nx + j  # +y
+            # Goes first...
             iyn = (i-1)*Nx + j  # -y
             
             
@@ -319,6 +536,9 @@ def poisson_variable_spacing_radial_faster(x, y):
                 ab(ind, iyp,  -1 * Dy_minus * prefactor_y)
     
     return sparse.csr_matrix(sparse.coo_matrix((ab.data, (ab.rows, ab.cols)), shape=(Nx*Ny, Nx*Ny))) # Convert to better format for usage
+
+
+
 
 
 
@@ -395,6 +615,298 @@ class ParamsSample:
     @property
     def theta(self) -> float:
          return self.theta_deg * np.pi/180
+
+
+
+@dataclass
+class AllParams:
+    dmin : float
+    dmax : float
+    istep : int
+    Rtip : float = 20.0
+    theta_deg : float = 15.0
+    Hcone : float = 15000.0
+    Hcant : float = 500.0
+    Rcant : float = 15000.0
+    zMax : float = Rtip*1000.0
+    rhoMax : float = Rtip*1000.0
+    h0 : float = Rtip * 0.02
+    Nuni : int = 50 # Uniformly spaced points in the r and z_plus directions
+    Nr : int = 500
+    Nz_plus : int = 500
+    hsam : float = 1.0
+    eps_r : float = 3.0
+    equally_spaced_sample : bool = True
+    pt : int = 0
+
+    
+    @property
+    def theta(self) -> float:
+         return self.theta_deg * np.pi/180
+
+    @property
+    def Npts(self) -> int:
+        return int(np.round((self.dmax - self.dmin) / (self.h0 * self.istep)))+1
+
+
+    @property
+    def ds(self) -> np.array:
+        return self.dmin + np.arange(self.Npts) * self.istep * self.h0
+
+    @property
+    def d(self) -> float:
+        return self.ds[self.pt]
+
+
+class CapSolAll:
+    def __init__(self, params: AllParams):
+        self.params = params
+
+        self.r, self.r_ratio = guni_grid(params.Nuni, params.Nr, params.h0, params.rhoMax)
+        self.z_plus, self.z_ratio = guni_grid(params.Nuni, params.Nz_plus,
+                                                params.h0, params.zMax)
+        
+        
+        self._setup_z_grid()
+        self._setup_grid_and_boundary()
+
+
+    def _setup_z_grid(self):
+        params = self.params
+        if params.equally_spaced_sample:
+            self.z_minus = generate_gapsam_grid(params.h0, params.hsam, params.d)
+        else:
+            raise ValueError("Non-equally spaced sample points not yet implemented.")
+
+        # Make the final, overall, z grid:
+        self.z = np.r_[self.z_minus, self.z_plus]
+        
+    
+    def _setup_grid_and_boundary(self):
+        params = self.params
+        self.eps_z = epsilon_z(self.z, self.params.d, self.params.eps_r)
+
+        self.R, self.Z = np.meshgrid(self.r, self.z)
+
+        self.spm_tip = (sphere(self.R, self.Z, self.params.Rtip) +
+                        cone(self.R, self.Z, params.Rtip, params.theta, params.Hcone) +
+                        body(self.R, self.Z, params.Hcone, params.Hcant, params.Rcant)
+                        )
+        
+        self.Nr = len(self.r)
+        self.Nz = len(self.z)
+
+        self.outer_boundary = boundary_radial(self.Nr, self.Nz)
+
+        self.boundary = self.spm_tip.ravel() + self.outer_boundary
+
+        self.u = np.zeros_like(self.R)
+        self.u[self.spm_tip] = 1.0
+
+    def setup_matrices_init(self):
+        self.A = poisson_var_rad_samp_fast(self.r, self.z, self.eps_z)
+
+        self.f = -self.A @ self.u.ravel()
+
+        self.A_free = self.A[~self.boundary].T[~self.boundary].T
+
+        self.f_free = self.f[~self.boundary]
+    
+    def solve_init(self):
+        u_cut = la.spsolve(self.A_free, self.f_free)
+        self.u = self.u.ravel()
+        self.u[~self.boundary] = u_cut
+        self.u = self.u.reshape((self.Nz, self.Nr))
+    
+    def solve_new(self, guess, solver=la.cgs):
+        u_cut, info = solver(self.A_free, self.f_free, guess)
+        # Check whether info is zero...
+        # print(info)
+        self.u = self.u.ravel()
+        self.u[~self.boundary] = u_cut
+        self.u = self.u.reshape((self.Nz, self.Nr))
+
+    def process(self):
+        self.dV = dV =  grid_area(self.r, self.z)
+
+        self.energy = 0.5 * np.sum(dV * self.eps_z.reshape((-1, 1)) * abs(E_field(self.u, self.r, self.z))**2) * 1e-9 * 8.854e-12
+
+        self.energy_z = 0.5 * np.sum(dV * self.eps_z.reshape((-1, 1)) * E_field(self.u, self.r, self.z).imag**2) * 1e-9 * 8.854e-12
+
+        self.c=self.energy*2
+
+        return self.c # In SI Units...
+
+    def run(self, solver=la.bicgstab):
+        p = self.params
+        self.C = np.zeros_like(p.ds)
+        print(f"Stepping from {p.d} to {p.dmax} by {p.istep*p.h0} nm")
+        print(f"Total simulations: {p.Npts}")
+        for i, dist in enumerate(p.ds):
+            p = self.params
+            start_time = dt.now()
+            if i == 0:
+                self.setup_matrices_init()
+                end_setup_time = dt.now()
+                setup_time = end_setup_time - start_time
+                self.solve_init()
+                solve_time = dt.now() - end_setup_time
+            else:
+                # We need to setup the z grid again since the distance increased...
+                self._setup_z_grid()
+                # New meshgrid and boundary function
+                self._setup_grid_and_boundary()
+                self.setup_matrices_init()
+                end_setup_time = dt.now()
+                setup_time = end_setup_time - start_time
+                guess =  np.r_[self.u[:p.istep], self.u_old]
+                # print(guess.shape)
+                # print(self.u.shape)
+                self.solve_new(guess=guess.ravel()[~self.boundary], solver=solver)
+                solve_time = dt.now() - end_setup_time
+
+            
+
+            self.C[i] = self.process() # Save capacitance to array...
+            self.u_old = copy.copy(self.u)
+            print(f"{i+1}. d = {p.d} nm, tSetup = {setup_time.seconds/60:.2f} m, tSolve = {solve_time.seconds/60:.2f} m, C = {self.C[i]:.4e} F")
+            # print(self.params.d)
+            self.params.pt += 1
+            # print(self.params.d)
+
+
+
+class CapSolAllRev:
+    def __init__(self, params: AllParams):
+        self.params = params
+
+        self.r, self.r_ratio = guni_grid(params.Nuni, params.Nr, params.h0, params.rhoMax)
+        self.z_plus, self.z_ratio = guni_grid(params.Nuni, params.Nz_plus,
+                                                params.h0, params.zMax)
+        
+        
+        self._setup_z_grid()
+        self._setup_grid_and_boundary()
+
+
+    def _setup_z_grid(self):
+        params = self.params
+        if params.equally_spaced_sample:
+            self.z_minus = generate_gapsam_grid(params.h0, params.hsam, params.d)
+        else:
+            raise ValueError("Non-equally spaced sample points not yet implemented.")
+
+        # Make the final, overall, z grid:
+        self.z = np.r_[self.z_minus, self.z_plus][::-1] # Reverse the z grid...
+        
+    
+    def _setup_grid_and_boundary(self):
+        params = self.params
+        self.eps_z = epsilon_z(self.z, self.params.d, self.params.eps_r)
+
+        self.R, self.Z = np.meshgrid(self.r, self.z)
+
+        self.spm_tip = (sphere(self.R, self.Z, self.params.Rtip) +
+                        cone(self.R, self.Z, params.Rtip, params.theta, params.Hcone) +
+                        body(self.R, self.Z, params.Hcone, params.Hcant, params.Rcant)
+                        )
+        
+        self.Nr = len(self.r)
+        self.Nz = len(self.z)
+
+        self.outer_boundary = boundary_radial(self.Nr, self.Nz)
+
+        self.boundary = self.spm_tip.ravel() + self.outer_boundary
+
+        self.u = np.zeros_like(self.R)
+        self.u[self.spm_tip] = 1.0
+
+    def setup_matrices_init(self):
+        self.Ab = _poisson_var_rad_samp_fast(self.r, self.z, self.eps_z)
+
+        self.A = self.Ab.to_csr(shape=(self.Nr*self.Nz, self.Nr * self.Nz))
+
+        self._apply_boundaries()
+
+    
+
+    def setup_matrices_new(self):
+        # r, z need to have been updated by _setup_grid_and_boundary...
+        self.Ab = _poisson_finish(self.r, self.z, self.eps_z, self.Ab, self.params_old)
+
+        self.A = self.Ab.to_csr(shape=(self.Nr*self.Nz, self.Nr * self.Nz))
+
+        self._apply_boundaries()
+
+    def _apply_boundaries(self):
+        self.f = -self.A @ self.u.ravel()
+
+        self.A_free = self.A[~self.boundary].T[~self.boundary].T
+
+        self.f_free = self.f[~self.boundary]
+
+
+    def solve_init(self):
+        u_cut = la.spsolve(self.A_free, self.f_free)
+        self.u = self.u.ravel()
+        self.u[~self.boundary] = u_cut
+        self.u = self.u.reshape((self.Nz, self.Nr))
+    
+    def solve_new(self, guess, solver=la.cgs):
+        u_cut, info = solver(self.A_free, self.f_free, guess)
+        # Check whether info is zero...
+        # print(info)
+        self.u = self.u.ravel()
+        self.u[~self.boundary] = u_cut
+        self.u = self.u.reshape((self.Nz, self.Nr))
+
+    def process(self):
+        self.dV = dV = grid_area(self.r, self.z)
+
+        self.energy = 0.5 * np.sum(dV * self.eps_z.reshape((-1, 1)) * abs(E_field(self.u, self.r, self.z))**2) * 1e-9 * 8.854e-12
+
+        self.energy_z = 0.5 * np.sum(dV * self.eps_z.reshape((-1, 1)) * E_field(self.u, self.r, self.z).imag**2) * 1e-9 * 8.854e-12
+
+        self.c=self.energy*2
+
+        return self.c # In SI Units...
+
+    def run(self, solver=la.bicgstab):
+        p = self.params
+        self.C = np.zeros_like(p.ds)
+        print(f"Stepping from {p.d} to {p.dmax} by {p.istep*p.h0} nm")
+        print(f"Total simulations: {p.Npts}")
+        for i, dist in enumerate(p.ds):
+            p = self.params
+            start_time = dt.now()
+            if i == 0:
+                self.setup_matrices_init()
+                end_setup_time = dt.now()
+                setup_time = end_setup_time - start_time
+                self.solve_init()
+                solve_time = dt.now() - end_setup_time
+            else:
+                # We need to setup the z grid again since the distance increased...
+                self._setup_z_grid()
+                # New meshgrid and boundary function
+                self._setup_grid_and_boundary()
+                self.setup_matrices_new()
+                end_setup_time = dt.now()
+                setup_time = end_setup_time - start_time
+                guess =  np.r_[self.u[:p.istep], self.u_old]
+                # print(guess.shape)
+                # print(self.u.shape)
+                self.solve_new(guess=guess.ravel()[~self.boundary], solver=solver)
+                solve_time = dt.now() - end_setup_time
+
+            self.C[i] = self.process() # Save capacitance to array...
+            self.params_old = copy.copy(self.params)
+            self.u_old = copy.copy(self.u)
+            print(f"{i+1}. d = {p.d} nm, tSetup = {setup_time.seconds/60:.2f} m, tSolve = {solve_time.seconds/60:.2f} m, C = {self.C[i]:.4e} F")
+            # print(self.params.d)
+            self.params.pt += 1
+            # print(self.params.d)
+
 
 
 
@@ -511,7 +1023,7 @@ class CapSolSample:
         self.u[self.spm_tip] = 1.0
 
     def setup_matrices(self):
-        self.A = poisson_variable_spacing_radial_samp(self.r, self.z, self.eps_z)
+        self.A = poisson_var_rad_samp_fast(self.r, self.z, self.eps_z)
 
         self.f = -self.A @ self.u.ravel()
 
@@ -607,15 +1119,19 @@ class SphereTest:
         return self.c # In SI Units...
     
     def run(self):
+        start_time = dt.now()
         print("Grids:")
-        print(f"r_ratio = {self.r_ratio:.3f}, z_ratio = {self.z_ratio:.3f}")
+        print(f"r_ratio = {self.r_ratio:.4f}, z_ratio = {self.z_ratio:.4f}")
         print("Setting up matrices:")
         self.setup_matrices()
+        now = dt.now()
+        print(f"Matrices set up in {now - start_time}")
         print("Solving...")
         self.solve()
+        print(f"Solved in {dt.now() - now}")
         self.process()
         print(f"C = {self.c:.5e} F")
-        print("Done!")
+        print(f"Done! Total time: {dt.now() - start_time}")
 
     def __repr__(self):
         return f"CapSol(params={repr(self.params)})"
@@ -659,7 +1175,7 @@ class SphereTestSample:
 
     
     def setup_matrices(self):
-        self.A = poisson_variable_spacing_radial_samp(self.r, self.z, self.eps_z)
+        self.A = poisson_var_rad_samp_fast(self.r, self.z, self.eps_z)
 
         self.f = -self.A @ self.u.ravel()
 
@@ -686,15 +1202,19 @@ class SphereTestSample:
         return self.c # In SI Units...
 
     def run(self):
+        start_time = dt.now()
         print("Grids:")
-        print(f"r_ratio = {self.r_ratio:.3f}, z_ratio = {self.z_ratio:.3f}")
+        print(f"r_ratio = {self.r_ratio:.4f}, z_ratio = {self.z_ratio:.4f}")
         print("Setting up matrices:")
         self.setup_matrices()
+        now = dt.now()
+        print(f"Matrices set up in {now - start_time}")
         print("Solving...")
         self.solve()
+        print(f"Solved in {dt.now() - now}")
         self.process()
         print(f"C = {self.c:.5e} F")
-        print("Done!")
+        print(f"Done! Total time: {dt.now() - start_time}")
 
     def __repr__(self):
         return f"CapSol(params={repr(self.params)})"
@@ -704,26 +1224,31 @@ def Totalsim(params, dmin, dmax, istep, fname, Test=0):
     distances=np.arange(dmin, dmax, istep*params.h0)
     print(distances)
    
-    for d in tqdm(distances):
+    for i, d in tqdm(enumerate(distances), total=len(distances)):
         start_time= dt.now()
         params.d= d
+        print(f"Distance {d} nm ({i}/{len(distances)})")
         if Test==1:
-            sim=SphereTest(params)
+            sim=SphereTestSample(params)
         else:
-           sim=CapSol(params) 
-        sim.setup_matrices()
-        sim.solve()
-        sim.process()
+           sim=CapSolSample(params) 
+        sim.run()
         capacitances.append(sim.c)
         end_time=dt.now()
         elapsed_time= end_time-start_time
         print(elapsed_time)
-    np.savetxt(fname, np.c_[distances, capacitances], header='distance (nm) Capacitances(F)', footer=f'Totalsim(params={params}, dmin={dmin}, dmax={dmax}, istep={istep}, fname={fname}), Test={Test}')
+    np.savetxt(fname, np.c_[distances, capacitances], header='distance (nm) Capacitances(F)',
+                footer=f'Totalsim(params={params}, dmin={dmin}, dmax={dmax}, istep={istep}, fname={fname}, Test={Test})')
 
     return distances, capacitances
 
 def runnewcapsol(input_fname= "capsol.in", output_fname="C-Z.dat"):
     gp=nac.get_gridparameters(input_fname)
-    params=Params(Rtip=gp["Rtip"], theta_deg=gp["half-angle"],Hcone=gp["HCone"], Hcant=gp["thickness_Cantilever"], Rcant=gp["RCantilever"], zMax=gp["z_max"],rhoMax=gp["rho_max"], h0=gp["h0"], d=gp["min"], Nuni=gp["Nuni"], Nr=gp["n"], Nz_plus=gp["m+"],hsam=gp["Thickness_sample"])
+    params=ParamsSample(Rtip=gp["Rtip"], theta_deg=gp["half-angle"],
+                  Hcone=gp["HCone"], Hcant=gp["thickness_Cantilever"],
+                  Rcant=gp["RCantilever"], zMax=gp["z_max"], rhoMax=gp["rho_max"],
+                  h0=gp["h0"], d=gp["min"], Nuni=gp["Nuni"], Nr=gp["n"],
+                  Nz_plus=gp["m+"],hsam=gp["Thickness_sample"],
+                eps_r=gp['eps_r'], equally_spaced_sample=gp["equally_spaced_sample"])
     totalsim=Totalsim(params, gp["min"], gp["max"], gp["istep"], output_fname, gp["Test"])
     return totalsim
