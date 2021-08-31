@@ -764,7 +764,6 @@ class CapSolAll:
                 # print(self.u.shape)
                 self.solve_new(guess=guess.ravel()[~self.boundary], solver=solver)
                 solve_time = dt.now() - end_setup_time
-
             
 
             self.C[i] = self.process() # Save capacitance to array...
@@ -1226,7 +1225,7 @@ def Totalsim(params, dmin, dmax, istep, fname, Test=0):
    
     for i, d in tqdm(enumerate(distances), total=len(distances)):
         start_time= dt.now()
-        params.d= d
+        params.d = d
         print(f"Distance {d} nm ({i}/{len(distances)})")
         if Test==1:
             sim=SphereTestSample(params)
@@ -1249,6 +1248,17 @@ def runnewcapsol(input_fname= "capsol.in", output_fname="C-Z.dat"):
                   Rcant=gp["RCantilever"], zMax=gp["z_max"], rhoMax=gp["rho_max"],
                   h0=gp["h0"], d=gp["min"], Nuni=gp["Nuni"], Nr=gp["n"],
                   Nz_plus=gp["m+"],hsam=gp["Thickness_sample"],
-                eps_r=gp['eps_r'], equally_spaced_sample=gp["equally_spaced_sample"])
+                eps_r=gp['eps_r'], equally_spaced_sample=gp["Equally spaced"])
     totalsim=Totalsim(params, gp["min"], gp["max"], gp["istep"], output_fname, gp["Test"])
     return totalsim
+
+# def runnewcapsol(input_fname= "capsol.in", output_fname="C-Z.dat"):
+#     gp=nac.get_gridparameters(input_fname)
+#     params=ParamsSample(Rtip=gp["Rtip"], theta_deg=gp["half-angle"],
+#                   Hcone=gp["HCone"], Hcant=gp["thickness_Cantilever"],
+#                   Rcant=gp["RCantilever"], zMax=gp["z_max"], rhoMax=gp["rho_max"],
+#                   h0=gp["h0"], d=gp["min"], Nuni=gp["Nuni"], Nr=gp["n"],
+#                   Nz_plus=gp["m+"],hsam=gp["Thickness_sample"],
+#                 eps_r=gp['eps_r'], equally_spaced_sample=gp["equally_spaced_sample"])
+#     totalsim=Totalsim(params, gp["min"], gp["max"], gp["istep"], output_fname, gp["Test"])
+#     return totalsim
