@@ -1,0 +1,41 @@
+set verbose
+
+squeue -j $SLURM_JOB_ID
+squeue -j 14409316
+             JOBID PARTITION     NAME     USER ST       TIME  NODES NODELIST(REASON)
+          14409316    serial   CapSol maroniea  R       0:02      1 o0014
+
+
+
+
+
+
+
+
+
+cd $TMPDIR
+cd /tmp/slurmtmp.14409316
+cp -p "$SLURM_SUBMIT_DIR/RR_originalTirmzi-0001.in" capsol.in
+cp -p /fs/ess/PSS0003/Output-Fortran/0337-RR_originalTirmzi-0001/RR_originalTirmzi-0001.in capsol.in
+
+
+
+/fs/ess/PSS0003/bin/capsol > "$SLURM_SUBMIT_DIR/RR_originalTirmzi-0001.in.out"
+/fs/ess/PSS0003/bin/capsol
+Bus error (core dumped)
+ls -al
+ls -al
+total 84
+drwx------  3 maroniea2023 PSS0003   147 Aug  4 14:52 .
+drwxrwxrwt 28 root         root     8192 Aug  4 14:52 ..
+-rw-r--r--  1 maroniea2023 PSS0003   538 Aug  4 14:52 capsol.in
+-rw-------  1 maroniea2023 PSS0003     0 Aug  4 14:52 core.18639
+-rw-r--r--  1 maroniea2023 PSS0003     0 Aug  4 14:52 ElecField_gap.dat
+-rw-r--r--  1 maroniea2023 PSS0003     0 Aug  4 14:52 ElecField_mid.dat
+drwxr-xr-x  2 maroniea2023 PSS0003    22 Aug  4 14:52 .jobdata
+-rw-r--r--  1 maroniea2023 PSS0003 65331 Aug  4 14:52 ProbeGeometry.dat
+-rw-r--r--  1 maroniea2023 PSS0003    58 Aug  4 14:52 Z-U.dat
+
+
+cp * $SLURM_SUBMIT_DIR
+cp capsol.in core.18639 ElecField_gap.dat ElecField_mid.dat ProbeGeometry.dat Z-U.dat /fs/ess/PSS0003/Output-Fortran/0337-RR_originalTirmzi-0001

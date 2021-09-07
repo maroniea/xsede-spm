@@ -60,4 +60,3 @@ def sum_sinh(alpha, eps=1e-8):
         terms = summand(np.arange(1, N_max + 1))
         return math.fsum(terms)
 
-

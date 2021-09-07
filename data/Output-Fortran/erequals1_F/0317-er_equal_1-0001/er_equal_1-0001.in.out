@@ -1,0 +1,131 @@
+ 
+    N o n u n i f o r m - m e s h   F i n i t e   D i f f e r e n c e                                         
+       _____                            _  _                                _____         _                   
+      / ____|                          (_)| |                              / ____|       | |                  
+     | |      __ _  _ __    __ _   ___  _ | |_  __ _  _ __    ___  ___    | (___    ___  | |__   __ ___  _ __ 
+     | |     / _` || '_ \  / _` | / __|| || __|/ _` || '_ \  / __|/ _ \    \___ \  / _ \ | |\ \ / // _ \| '__|
+     | |____| (_| || |_) || (_| || (__ | || |_| (_| || | | || (__|  __/    ____) || (_) || | \ V /|  __/| |   
+      \_____|\__,_|| .__/  \__,_| \___||_| \__|\__,_||_| |_| \___|\___|   |_____/  \___/ |_|  \_/  \___||_|   
+                   | |                                                                                        
+                   |_|                                    C y l i n d r i c a l   S y m m e t r y   Ver. 0.0  
+                                                          (Specialized for AFM Probe over a Multilayer sample)
+ 
+                                                                                  Time: 02.08.2021    15:11:35
+ 
+ 
+ 
+ ------------ Echo of input file: capsol.in ----------
+  1000  1000     2                                # Number of grids: n, m+, m-
+  0.500    1.00E+06    1.00E+06                   # Resolution: h0, Box-size: Rho_max, Z_max    *** ALL LENGTHS IN NANOMETER *** 
+   150.000   250.000   4                          # Tip-sample separation: min, max, istep (stepsize=istep*h0)
+  30.0  20.0   15.00E+03   13.75E+03  999.99E+00  # Probe shape: Rtip,half-angle,HCone,RCantilever, thickness_Cantilever
+ 990.000E-03   1.000E+00                          # Sample: eps_r, Thickness_sample
+LAPACK    0  1                                    # Solving: Method{LAPACK,PARDISO,NOSOLVE}, Test?(0=No,1=Sphere,2=lever-only),Verbosiy>0)
+   50      F # New grid params: Uniformly spaced points, equally spaced sample grid?
+ 
+ 
+ ===S/R,C/pi.e0.R:   5.0000  0.2036858E+04
+                                                             +++Separation,Capacitance, cpu time: *****  0.1699733E+04     73.30
+ ===S/R,C/pi.e0.R:   5.0667  0.2369267E+23
+                                                             +++Separation,Capacitance, cpu time: *****  0.1977124E+23    134.70
+ ===S/R,C/pi.e0.R:   5.1333  0.2036388E+04
+                                                             +++Separation,Capacitance, cpu time: *****  0.1699340E+04    205.02
+ ===S/R,C/pi.e0.R:   5.2000  0.2419503E+23
+                                                             +++Separation,Capacitance, cpu time: *****  0.2019045E+23    266.57
+ ===S/R,C/pi.e0.R:   5.2667  0.2426999E+23
+                                                             +++Separation,Capacitance, cpu time: *****  0.2025301E+23    328.94
+ ===S/R,C/pi.e0.R:   5.3333  0.2416469E+23
+                                                             +++Separation,Capacitance, cpu time: *****  0.2016514E+23    391.17
+ ===S/R,C/pi.e0.R:   5.4000  0.2410983E+23
+                                                             +++Separation,Capacitance, cpu time: *****  0.2011935E+23    453.33
+ ===S/R,C/pi.e0.R:   5.4667  0.2362313E+23
+                                                             +++Separation,Capacitance, cpu time: *****  0.1971321E+23    516.34
+ ===S/R,C/pi.e0.R:   5.5333  0.2035727E+23
+                                                             +++Separation,Capacitance, cpu time: *****  0.1698789E+23    578.71
+ ===S/R,C/pi.e0.R:   5.6000  0.2288533E+23
+                                                             +++Separation,Capacitance, cpu time: *****  0.1909752E+23    641.68
+ ===S/R,C/pi.e0.R:   5.6667  0.2367110E+23
+                                                             +++Separation,Capacitance, cpu time: *****  0.1975324E+23    704.71
+ ===S/R,C/pi.e0.R:   5.7333  0.2447603E+23
+                                                             +++Separation,Capacitance, cpu time: *****  0.2042494E+23    767.74
+ ===S/R,C/pi.e0.R:   5.8000  0.2393227E+23
+                                                             +++Separation,Capacitance, cpu time: *****  0.1997118E+23    831.60
+ ===S/R,C/pi.e0.R:   5.8667  0.2389382E+23
+                                                             +++Separation,Capacitance, cpu time: *****  0.1993910E+23    894.95
+ ===S/R,C/pi.e0.R:   5.9333  0.2371515E+23
+                                                             +++Separation,Capacitance, cpu time: *****  0.1979000E+23    958.59
+ ===S/R,C/pi.e0.R:   6.0000  0.2366942E+23
+                                                             +++Separation,Capacitance, cpu time: *****  0.1975184E+23   1023.46
+ ===S/R,C/pi.e0.R:   6.0667  0.2307672E+23
+                                                             +++Separation,Capacitance, cpu time: *****  0.1925724E+23   1087.40
+ ===S/R,C/pi.e0.R:   6.1333  0.2346468E+23
+                                                             +++Separation,Capacitance, cpu time: *****  0.1958098E+23   1152.18
+ ===S/R,C/pi.e0.R:   6.2000  0.2032725E+04
+                                                             +++Separation,Capacitance, cpu time: *****  0.1696283E+04   1238.79
+ ===S/R,C/pi.e0.R:   6.2667  0.2271611E+23
+                                                             +++Separation,Capacitance, cpu time: *****  0.1895631E+23   1303.73
+ ===S/R,C/pi.e0.R:   6.3333  0.2255690E+23
+                                                             +++Separation,Capacitance, cpu time: *****  0.1882345E+23   1369.35
+ ===S/R,C/pi.e0.R:   6.4000  0.2298708E+23
+                                                             +++Separation,Capacitance, cpu time: *****  0.1918243E+23   1434.55
+ ===S/R,C/pi.e0.R:   6.4667  0.2327001E+23
+                                                             +++Separation,Capacitance, cpu time: *****  0.1941853E+23   1500.41
+ ===S/R,C/pi.e0.R:   6.5333  0.2284808E+23
+                                                             +++Separation,Capacitance, cpu time: *****  0.1906644E+23   1566.31
+ ===S/R,C/pi.e0.R:   6.6000  0.2296472E+23
+                                                             +++Separation,Capacitance, cpu time: *****  0.1916377E+23   1631.98
+ ===S/R,C/pi.e0.R:   6.6667  0.2112084E+23
+                                                             +++Separation,Capacitance, cpu time: *****  0.1762508E+23   1698.50
+ ===S/R,C/pi.e0.R:   6.7333  0.2190817E+23
+                                                             +++Separation,Capacitance, cpu time: *****  0.1828209E+23   1764.51
+ ===S/R,C/pi.e0.R:   6.8000  0.2235351E+23
+                                                             +++Separation,Capacitance, cpu time: *****  0.1865373E+23   1830.99
+ ===S/R,C/pi.e0.R:   6.8667  0.2302739E+23
+                                                             +++Separation,Capacitance, cpu time: *****  0.1921607E+23   1897.85
+ ===S/R,C/pi.e0.R:   6.9333  0.2266230E+23
+                                                             +++Separation,Capacitance, cpu time: *****  0.1891141E+23   1964.32
+ ===S/R,C/pi.e0.R:   7.0000  0.2317160E+23
+                                                             +++Separation,Capacitance, cpu time: *****  0.1933641E+23   2031.78
+ ===S/R,C/pi.e0.R:   7.0667  0.2294804E+23
+                                                             +++Separation,Capacitance, cpu time: *****  0.1914986E+23   2098.80
+ ===S/R,C/pi.e0.R:   7.1333  0.2165413E+23
+                                                             +++Separation,Capacitance, cpu time: *****  0.1807010E+23   2166.18
+ ===S/R,C/pi.e0.R:   7.2000  0.2229984E+23
+                                                             +++Separation,Capacitance, cpu time: *****  0.1860894E+23   2234.26
+ ===S/R,C/pi.e0.R:   7.2667  0.2355018E+23
+                                                             +++Separation,Capacitance, cpu time: *****  0.1965233E+23   2301.58
+ ===S/R,C/pi.e0.R:   7.3333  0.2029006E+04
+                                                             +++Separation,Capacitance, cpu time: *****  0.1693181E+04   2374.37
+ ===S/R,C/pi.e0.R:   7.4000  0.2204087E+23
+                                                             +++Separation,Capacitance, cpu time: *****  0.1839283E+23   2442.39
+ ===S/R,C/pi.e0.R:   7.4667  0.2202390E+23
+                                                             +++Separation,Capacitance, cpu time: *****  0.1837867E+23   2510.73
+ ===S/R,C/pi.e0.R:   7.5333  0.2287669E+23
+                                                             +++Separation,Capacitance, cpu time: *****  0.1909031E+23   2579.80
+ ===S/R,C/pi.e0.R:   7.6000  0.2232098E+23
+                                                             +++Separation,Capacitance, cpu time: *****  0.1862658E+23   2648.24
+ ===S/R,C/pi.e0.R:   7.6667  0.2288420E+23
+                                                             +++Separation,Capacitance, cpu time: *****  0.1909658E+23   2717.52
+ ===S/R,C/pi.e0.R:   7.7333  0.2195990E+23
+                                                             +++Separation,Capacitance, cpu time: *****  0.1832526E+23   2786.69
+ ===S/R,C/pi.e0.R:   7.8000  0.2216945E+23
+                                                             +++Separation,Capacitance, cpu time: *****  0.1850013E+23   2855.68
+ ===S/R,C/pi.e0.R:   7.8667  0.2199655E+23
+                                                             +++Separation,Capacitance, cpu time: *****  0.1835585E+23   2925.64
+ ===S/R,C/pi.e0.R:   7.9333  0.2229311E+23
+                                                             +++Separation,Capacitance, cpu time: *****  0.1860333E+23   2995.01
+ ===S/R,C/pi.e0.R:   8.0000  0.2226504E+23
+                                                             +++Separation,Capacitance, cpu time: *****  0.1857990E+23   3065.06
+ ===S/R,C/pi.e0.R:   8.0667  0.2204733E+23
+                                                             +++Separation,Capacitance, cpu time: *****  0.1839822E+23   3135.26
+ ===S/R,C/pi.e0.R:   8.1333  0.2187048E+23
+                                                             +++Separation,Capacitance, cpu time: *****  0.1825065E+23   3205.55
+ ===S/R,C/pi.e0.R:   8.2000  0.2123449E+23
+                                                             +++Separation,Capacitance, cpu time: *****  0.1771991E+23   3276.44
+ ===S/R,C/pi.e0.R:   8.2667  0.1920757E+23
+                                                             +++Separation,Capacitance, cpu time: *****  0.1602848E+23   3346.69
+ ===S/R,C/pi.e0.R:   8.3333  0.2212049E+23
+                                                             +++Separation,Capacitance, cpu time: *****  0.1845927E+23   3417.59
+
+                                                           G O O D   B Y E !      Time: 02.08.2021    15:27:32
+

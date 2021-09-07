@@ -1,0 +1,24 @@
+set verbose
+
+squeue -j $SLURM_JOB_ID
+squeue -j 14374014
+             JOBID PARTITION     NAME     USER ST       TIME  NODES NODELIST(REASON)
+          14374014    serial   CapSol maroniea  R       0:02      1 o0023
+
+
+
+
+
+
+
+
+
+cd $TMPDIR
+cd /tmp/slurmtmp.14374014
+cp -p "$SLURM_SUBMIT_DIR/VariedNuni_8_2_2021-0000.in" capsol.in
+cp -p /fs/ess/PSS0003/Output-Fortran/0309-VariedNuni_8_2_2021-0000/VariedNuni_8_2_2021-0000.in capsol.in
+
+
+
+/fs/ess/PSS0003/bin/capsol > "$SLURM_SUBMIT_DIR/VariedNuni_8_2_2021-0000.in.out"
+/fs/ess/PSS0003/bin/capsol

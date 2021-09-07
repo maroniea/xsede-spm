@@ -1,0 +1,41 @@
+set verbose
+
+squeue -j $SLURM_JOB_ID
+squeue -j 14409314
+             JOBID PARTITION     NAME     USER ST       TIME  NODES NODELIST(REASON)
+          14409314    serial   CapSol maroniea  R       0:02      1 o0003
+
+
+
+
+
+
+
+
+
+cd $TMPDIR
+cd /tmp/slurmtmp.14409314
+cp -p "$SLURM_SUBMIT_DIR/RR_originalTirmzi-0002.in" capsol.in
+cp -p /fs/ess/PSS0003/Output-Fortran/0335-RR_originalTirmzi-0002/RR_originalTirmzi-0002.in capsol.in
+
+
+
+/fs/ess/PSS0003/bin/capsol > "$SLURM_SUBMIT_DIR/RR_originalTirmzi-0002.in.out"
+/fs/ess/PSS0003/bin/capsol
+Killed
+ls -al
+ls -al
+total 80
+drwx------  3 maroniea2023 PSS0003   129 Aug  4 14:52 .
+drwxrwxrwt 34 root         root     8192 Aug  4 14:52 ..
+-rw-r--r--  1 maroniea2023 PSS0003   538 Aug  4 14:52 capsol.in
+-rw-r--r--  1 maroniea2023 PSS0003     0 Aug  4 14:52 ElecField_gap.dat
+-rw-r--r--  1 maroniea2023 PSS0003     0 Aug  4 14:52 ElecField_mid.dat
+drwxr-xr-x  2 maroniea2023 PSS0003    22 Aug  4 14:52 .jobdata
+-rw-r--r--  1 maroniea2023 PSS0003 59255 Aug  4 14:52 ProbeGeometry.dat
+-rw-r--r--  1 maroniea2023 PSS0003    58 Aug  4 14:52 Z-U.dat
+
+
+cp * $SLURM_SUBMIT_DIR
+cp capsol.in ElecField_gap.dat ElecField_mid.dat ProbeGeometry.dat Z-U.dat /fs/ess/PSS0003/Output-Fortran/0335-RR_originalTirmzi-0002
+slurmstepd: error: Detected 1 oom-kill event(s) in StepId=14409314.batch cgroup. Some of your processes may have been killed by the cgroup out-of-memory handler.

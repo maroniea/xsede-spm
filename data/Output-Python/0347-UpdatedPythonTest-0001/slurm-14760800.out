@@ -1,0 +1,58 @@
+set verbose
+
+squeue -j $SLURM_JOB_ID
+squeue -j 14760800
+             JOBID PARTITION     NAME     USER ST       TIME  NODES NODELIST(REASON)
+          14760800    serial   CapSol maroniea  R       0:02      1 o0169
+
+
+
+
+
+
+
+
+
+cd $TMPDIR
+cd /tmp/slurmtmp.14760800
+cp -p "$SLURM_SUBMIT_DIR/UpdatedPythonTest-0001.in" capsol.in
+cp -p /fs/ess/PSS0003/Output-Fortran/0347-UpdatedPythonTest-0001/UpdatedPythonTest-0001.in capsol.in
+
+
+
+/fs/ess/PSS0003/bin/capsol > "$SLURM_SUBMIT_DIR/UpdatedPythonTest-0001.in.out"
+/fs/ess/PSS0003/bin/capsol
+ls -al
+ls -al
+total 1092
+drwx------  3 maroniea2023 PSS0003  4096 Aug 31 09:49 .
+drwxrwxrwt 20 root         root     4096 Aug 31 09:49 ..
+-rw-r--r--  1 maroniea2023 PSS0003   531 Aug 31 09:48 capsol.in
+-rw-r--r--  1 maroniea2023 PSS0003 46189 Aug 31 09:49 ElecField_gap.dat
+-rw-r--r--  1 maroniea2023 PSS0003  2185 Aug 31 09:49 ElecField_mid.dat
+-rw-r--r--  1 maroniea2023 PSS0003 53081 Aug 31 09:48 Fz.dat0.1000
+-rw-r--r--  1 maroniea2023 PSS0003 53081 Aug 31 09:48 Fz.dat0.1500
+-rw-r--r--  1 maroniea2023 PSS0003 53081 Aug 31 09:48 Fz.dat0.2000
+-rw-r--r--  1 maroniea2023 PSS0003 53081 Aug 31 09:48 Fz.dat0.2500
+-rw-r--r--  1 maroniea2023 PSS0003 53081 Aug 31 09:49 Fz.dat0.3000
+-rw-r--r--  1 maroniea2023 PSS0003 53081 Aug 31 09:49 Fz.dat0.3500
+-rw-r--r--  1 maroniea2023 PSS0003 53081 Aug 31 09:49 Fz.dat0.4000
+-rw-r--r--  1 maroniea2023 PSS0003 53081 Aug 31 09:49 Fz.dat0.4500
+-rw-r--r--  1 maroniea2023 PSS0003 53081 Aug 31 09:49 Fz.dat0.5000
+-rw-r--r--  1 maroniea2023 PSS0003 53081 Aug 31 09:49 Fz.dat0.5500
+-rw-r--r--  1 maroniea2023 PSS0003 53081 Aug 31 09:49 Fz.dat0.6000
+-rw-r--r--  1 maroniea2023 PSS0003 53081 Aug 31 09:49 Fz.dat0.6500
+-rw-r--r--  1 maroniea2023 PSS0003 53081 Aug 31 09:49 Fz.dat0.7000
+-rw-r--r--  1 maroniea2023 PSS0003 53081 Aug 31 09:49 Fz.dat0.7500
+-rw-r--r--  1 maroniea2023 PSS0003 53081 Aug 31 09:49 Fz.dat0.8000
+-rw-r--r--  1 maroniea2023 PSS0003 53081 Aug 31 09:49 Fz.dat0.8500
+-rw-r--r--  1 maroniea2023 PSS0003 53081 Aug 31 09:49 Fz.dat0.9000
+-rw-r--r--  1 maroniea2023 PSS0003 53081 Aug 31 09:49 Fz.dat0.9500
+-rw-r--r--  1 maroniea2023 PSS0003 53081 Aug 31 09:49 Fz.dat1.0000
+drwxr-xr-x  2 maroniea2023 PSS0003    22 Aug 31 09:48 .jobdata
+-rw-r--r--  1 maroniea2023 PSS0003 34365 Aug 31 09:48 ProbeGeometry.dat
+-rw-r--r--  1 maroniea2023 PSS0003   837 Aug 31 09:49 Z-U.dat
+
+
+cp * $SLURM_SUBMIT_DIR
+cp capsol.in ElecField_gap.dat ElecField_mid.dat Fz.dat0.1000 Fz.dat0.1500 Fz.dat0.2000 Fz.dat0.2500 Fz.dat0.3000 Fz.dat0.3500 Fz.dat0.4000 Fz.dat0.4500 Fz.dat0.5000 Fz.dat0.5500 Fz.dat0.6000 Fz.dat0.6500 Fz.dat0.7000 Fz.dat0.7500 Fz.dat0.8000 Fz.dat0.8500 Fz.dat0.9000 Fz.dat0.9500 Fz.dat1.0000 ProbeGeometry.dat Z-U.dat /fs/ess/PSS0003/Output-Fortran/0347-UpdatedPythonTest-0001

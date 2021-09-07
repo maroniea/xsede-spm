@@ -1,0 +1,7 @@
+   500  500   20                                # Number of grids: n, m+, m-
+  0.5   1000000.0    1000000.0                   # Resolution: h0, Box-size: Rho_max, Z_max    *** ALL LENGTHS IN NANOMETER *** 
+     2.0    20.0   2                         # Tip-sample separation: min, max, istep (stepsize=istep*h0)
+  20.0  15.0  15000.0  40000.0  500.0  # Probe shape: Rtip,half-angle,HCone,RCantilever, thickness_Cantilever
+   3.0      10.0                             # Sample: eps_r, Thickness_sample
+   LAPACK  0  0 
+   1  F

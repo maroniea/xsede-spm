@@ -1,0 +1,90 @@
+set verbose
+
+squeue -j $SLURM_JOB_ID
+squeue -j 14374014
+             JOBID PARTITION     NAME     USER ST       TIME  NODES NODELIST(REASON)
+          14374014    serial   CapSol maroniea  R       0:02      1 o0023
+
+
+
+
+
+
+
+
+
+cd $TMPDIR
+cd /tmp/slurmtmp.14374014
+cp -p "$SLURM_SUBMIT_DIR/VariedNuni_8_2_2021-0000.in" capsol.in
+cp -p /fs/ess/PSS0003/Output-Fortran/0309-VariedNuni_8_2_2021-0000/VariedNuni_8_2_2021-0000.in capsol.in
+
+
+
+/fs/ess/PSS0003/bin/capsol > "$SLURM_SUBMIT_DIR/VariedNuni_8_2_2021-0000.in.out"
+/fs/ess/PSS0003/bin/capsol
+ls -al
+ls -al
+total 6356
+drwx------  3 maroniea2023 PSS0003    4096 Aug  2 14:07 .
+drwxrwxrwt 24 root         root       8192 Aug  2 14:07 ..
+-rw-r--r--  1 maroniea2023 PSS0003     536 Aug  2 13:46 capsol.in
+-rw-r--r--  1 maroniea2023 PSS0003 1820445 Aug  2 14:07 ElecField_gap.dat
+-rw-r--r--  1 maroniea2023 PSS0003    5865 Aug  2 14:07 ElecField_mid.dat
+-rw-r--r--  1 maroniea2023 PSS0003   86754 Aug  2 13:47 Fz.dat5.0000
+-rw-r--r--  1 maroniea2023 PSS0003   86754 Aug  2 13:47 Fz.dat5.0667
+-rw-r--r--  1 maroniea2023 PSS0003   86754 Aug  2 13:47 Fz.dat5.1333
+-rw-r--r--  1 maroniea2023 PSS0003   86754 Aug  2 13:48 Fz.dat5.2000
+-rw-r--r--  1 maroniea2023 PSS0003   86754 Aug  2 13:48 Fz.dat5.2667
+-rw-r--r--  1 maroniea2023 PSS0003   86754 Aug  2 13:48 Fz.dat5.3333
+-rw-r--r--  1 maroniea2023 PSS0003   86754 Aug  2 13:49 Fz.dat5.4000
+-rw-r--r--  1 maroniea2023 PSS0003   86754 Aug  2 13:49 Fz.dat5.4667
+-rw-r--r--  1 maroniea2023 PSS0003   86754 Aug  2 13:50 Fz.dat5.5333
+-rw-r--r--  1 maroniea2023 PSS0003   86754 Aug  2 13:50 Fz.dat5.6000
+-rw-r--r--  1 maroniea2023 PSS0003   86754 Aug  2 13:50 Fz.dat5.6667
+-rw-r--r--  1 maroniea2023 PSS0003   86754 Aug  2 13:51 Fz.dat5.7333
+-rw-r--r--  1 maroniea2023 PSS0003   86754 Aug  2 13:51 Fz.dat5.8000
+-rw-r--r--  1 maroniea2023 PSS0003   86754 Aug  2 13:52 Fz.dat5.8667
+-rw-r--r--  1 maroniea2023 PSS0003   86754 Aug  2 13:52 Fz.dat5.9333
+-rw-r--r--  1 maroniea2023 PSS0003   86754 Aug  2 13:52 Fz.dat6.0000
+-rw-r--r--  1 maroniea2023 PSS0003   86754 Aug  2 13:53 Fz.dat6.0667
+-rw-r--r--  1 maroniea2023 PSS0003   86754 Aug  2 13:53 Fz.dat6.1333
+-rw-r--r--  1 maroniea2023 PSS0003   86754 Aug  2 13:54 Fz.dat6.2000
+-rw-r--r--  1 maroniea2023 PSS0003   86754 Aug  2 13:54 Fz.dat6.2667
+-rw-r--r--  1 maroniea2023 PSS0003   86754 Aug  2 13:54 Fz.dat6.3333
+-rw-r--r--  1 maroniea2023 PSS0003   86754 Aug  2 13:55 Fz.dat6.4000
+-rw-r--r--  1 maroniea2023 PSS0003   86754 Aug  2 13:55 Fz.dat6.4667
+-rw-r--r--  1 maroniea2023 PSS0003   86754 Aug  2 13:56 Fz.dat6.5333
+-rw-r--r--  1 maroniea2023 PSS0003   86754 Aug  2 13:56 Fz.dat6.6000
+-rw-r--r--  1 maroniea2023 PSS0003   86754 Aug  2 13:56 Fz.dat6.6667
+-rw-r--r--  1 maroniea2023 PSS0003   86754 Aug  2 13:57 Fz.dat6.7333
+-rw-r--r--  1 maroniea2023 PSS0003   86754 Aug  2 13:57 Fz.dat6.8000
+-rw-r--r--  1 maroniea2023 PSS0003   86754 Aug  2 13:58 Fz.dat6.8667
+-rw-r--r--  1 maroniea2023 PSS0003   86754 Aug  2 13:58 Fz.dat6.9333
+-rw-r--r--  1 maroniea2023 PSS0003   86754 Aug  2 13:58 Fz.dat7.0000
+-rw-r--r--  1 maroniea2023 PSS0003   86754 Aug  2 13:59 Fz.dat7.0667
+-rw-r--r--  1 maroniea2023 PSS0003   86754 Aug  2 13:59 Fz.dat7.1333
+-rw-r--r--  1 maroniea2023 PSS0003   86754 Aug  2 14:00 Fz.dat7.2000
+-rw-r--r--  1 maroniea2023 PSS0003   86754 Aug  2 14:00 Fz.dat7.2667
+-rw-r--r--  1 maroniea2023 PSS0003   86754 Aug  2 14:00 Fz.dat7.3333
+-rw-r--r--  1 maroniea2023 PSS0003   86754 Aug  2 14:01 Fz.dat7.4000
+-rw-r--r--  1 maroniea2023 PSS0003   86754 Aug  2 14:01 Fz.dat7.4667
+-rw-r--r--  1 maroniea2023 PSS0003   86754 Aug  2 14:02 Fz.dat7.5333
+-rw-r--r--  1 maroniea2023 PSS0003   86754 Aug  2 14:02 Fz.dat7.6000
+-rw-r--r--  1 maroniea2023 PSS0003   86754 Aug  2 14:03 Fz.dat7.6667
+-rw-r--r--  1 maroniea2023 PSS0003   86754 Aug  2 14:03 Fz.dat7.7333
+-rw-r--r--  1 maroniea2023 PSS0003   86754 Aug  2 14:03 Fz.dat7.8000
+-rw-r--r--  1 maroniea2023 PSS0003   86754 Aug  2 14:04 Fz.dat7.8667
+-rw-r--r--  1 maroniea2023 PSS0003   86754 Aug  2 14:04 Fz.dat7.9333
+-rw-r--r--  1 maroniea2023 PSS0003   86754 Aug  2 14:05 Fz.dat8.0000
+-rw-r--r--  1 maroniea2023 PSS0003   86754 Aug  2 14:05 Fz.dat8.0667
+-rw-r--r--  1 maroniea2023 PSS0003   86754 Aug  2 14:06 Fz.dat8.1333
+-rw-r--r--  1 maroniea2023 PSS0003   86754 Aug  2 14:06 Fz.dat8.2000
+-rw-r--r--  1 maroniea2023 PSS0003   86754 Aug  2 14:06 Fz.dat8.2667
+-rw-r--r--  1 maroniea2023 PSS0003   86754 Aug  2 14:07 Fz.dat8.3333
+drwxr-xr-x  2 maroniea2023 PSS0003      22 Aug  2 13:46 .jobdata
+-rw-r--r--  1 maroniea2023 PSS0003   56217 Aug  2 13:46 ProbeGeometry.dat
+-rw-r--r--  1 maroniea2023 PSS0003    2149 Aug  2 14:07 Z-U.dat
+
+
+cp * $SLURM_SUBMIT_DIR
+cp capsol.in ElecField_gap.dat ElecField_mid.dat Fz.dat5.0000 Fz.dat5.0667 Fz.dat5.1333 Fz.dat5.2000 Fz.dat5.2667 Fz.dat5.3333 Fz.dat5.4000 Fz.dat5.4667 Fz.dat5.5333 Fz.dat5.6000 Fz.dat5.6667 Fz.dat5.7333 Fz.dat5.8000 Fz.dat5.8667 Fz.dat5.9333 Fz.dat6.0000 Fz.dat6.0667 Fz.dat6.1333 Fz.dat6.2000 Fz.dat6.2667 Fz.dat6.3333 Fz.dat6.4000 Fz.dat6.4667 Fz.dat6.5333 Fz.dat6.6000 Fz.dat6.6667 Fz.dat6.7333 Fz.dat6.8000 Fz.dat6.8667 Fz.dat6.9333 Fz.dat7.0000 Fz.dat7.0667 Fz.dat7.1333 Fz.dat7.2000 Fz.dat7.2667 Fz.dat7.3333 Fz.dat7.4000 Fz.dat7.4667 Fz.dat7.5333 Fz.dat7.6000 Fz.dat7.6667 Fz.dat7.7333 Fz.dat7.8000 Fz.dat7.8667 Fz.dat7.9333 Fz.dat8.0000 Fz.dat8.0667 Fz.dat8.1333 Fz.dat8.2000 Fz.dat8.2667 Fz.dat8.3333 ProbeGeometry.dat Z-U.dat /fs/ess/PSS0003/Output-Fortran/0309-VariedNuni_8_2_2021-0000
