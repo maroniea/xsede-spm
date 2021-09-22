@@ -1,0 +1,37 @@
+#!/bin/bash
+#SBATCH -J CapSolPy
+#SBATCH --time=10:00:00
+#SBATCH --nodes=1
+#SBATCH --ntasks=6
+#SBATCH --account=PSS0003
+
+# A Basic Gaussian Job for the OSC Owens Cluster
+#   https://www.osc.edu/resources/available_software/software_list/gaussian
+
+# SLURM_SUBMIT_DIR refers to the directory from which the job was submitted.
+
+# Emit verbose details as the job script executes.
+set -x
+# Emit verbose details on the job's queuing.
+squeue -j $SLURM_JOB_ID
+
+
+# The following lines set up the Capsol environment
+
+module load python/3.7-2019.10
+
+
+
+#
+# Move to the directory where the job was submitted
+#
+cd $TMPDIR
+cp -p "$SLURM_SUBMIT_DIR/NewTirmzi_variedthickness_75075090-0003.in" capsol.in
+#
+# Run Orca
+#
+/fs/ess/PSS0003/envs/bin/capsol_from_file.py > "$SLURM_SUBMIT_DIR/NewTirmzi_variedthickness_75075090-0003.in.out"
+ls -al
+#
+# Now, copy data (or move) back once the simulation has completed
+cp * $SLURM_SUBMIT_DIR

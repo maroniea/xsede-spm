@@ -1,0 +1,608 @@
+Capsol Py
+[100. 102. 104. 106. 108. 110. 112. 114. 116. 118. 120. 122. 124. 126.
+ 128. 130. 132. 134. 136. 138. 140. 142. 144. 146. 148. 150. 152. 154.
+ 156. 158. 160. 162. 164. 166. 168. 170. 172. 174. 176. 178. 180. 182.
+ 184. 186. 188. 190. 192. 194. 196. 198. 200. 202. 204. 206. 208. 210.
+ 212. 214. 216. 218. 220. 222. 224. 226. 228. 230. 232. 234. 236. 238.
+ 240. 242. 244. 246. 248.]
+Distance 100.0 nm (0/75)
+Grids:
+r_ratio = 1.014, z_ratio = 1.014
+Setting up matrices:
+Solving...
+C = 1.67044e-15 F
+Done!
+0:00:16.595027
+Distance 102.0 nm (1/75)
+Grids:
+r_ratio = 1.014, z_ratio = 1.014
+Setting up matrices:
+Solving...
+C = 1.67022e-15 F
+Done!
+0:00:17.550700
+Distance 104.0 nm (2/75)
+Grids:
+r_ratio = 1.014, z_ratio = 1.014
+Setting up matrices:
+Solving...
+C = 1.66999e-15 F
+Done!
+0:00:16.498346
+Distance 106.0 nm (3/75)
+Grids:
+r_ratio = 1.014, z_ratio = 1.014
+Setting up matrices:
+Solving...
+C = 1.66977e-15 F
+Done!
+0:00:16.576199
+Distance 108.0 nm (4/75)
+Grids:
+r_ratio = 1.014, z_ratio = 1.014
+Setting up matrices:
+Solving...
+C = 1.66954e-15 F
+Done!
+0:00:16.991207
+Distance 110.0 nm (5/75)
+Grids:
+r_ratio = 1.014, z_ratio = 1.014
+Setting up matrices:
+Solving...
+C = 1.66932e-15 F
+Done!
+0:00:16.660111
+Distance 112.0 nm (6/75)
+Grids:
+r_ratio = 1.014, z_ratio = 1.014
+Setting up matrices:
+Solving...
+C = 1.66909e-15 F
+Done!
+0:00:17.613529
+Distance 114.0 nm (7/75)
+Grids:
+r_ratio = 1.014, z_ratio = 1.014
+Setting up matrices:
+Solving...
+C = 1.66887e-15 F
+Done!
+0:00:17.754489
+Distance 116.0 nm (8/75)
+Grids:
+r_ratio = 1.014, z_ratio = 1.014
+Setting up matrices:
+Solving...
+C = 1.66865e-15 F
+Done!
+0:00:16.941361
+Distance 118.0 nm (9/75)
+Grids:
+r_ratio = 1.014, z_ratio = 1.014
+Setting up matrices:
+Solving...
+C = 1.66843e-15 F
+Done!
+0:00:17.144202
+Distance 120.0 nm (10/75)
+Grids:
+r_ratio = 1.014, z_ratio = 1.014
+Setting up matrices:
+Solving...
+C = 1.66821e-15 F
+Done!
+0:00:17.792608
+Distance 122.0 nm (11/75)
+Grids:
+r_ratio = 1.014, z_ratio = 1.014
+Setting up matrices:
+Solving...
+C = 1.66800e-15 F
+Done!
+0:00:17.369395
+Distance 124.0 nm (12/75)
+Grids:
+r_ratio = 1.014, z_ratio = 1.014
+Setting up matrices:
+Solving...
+C = 1.66778e-15 F
+Done!
+0:00:17.908715
+Distance 126.0 nm (13/75)
+Grids:
+r_ratio = 1.014, z_ratio = 1.014
+Setting up matrices:
+Solving...
+C = 1.66756e-15 F
+Done!
+0:00:18.479068
+Distance 128.0 nm (14/75)
+Grids:
+r_ratio = 1.014, z_ratio = 1.014
+Setting up matrices:
+Solving...
+C = 1.66735e-15 F
+Done!
+0:00:17.896287
+Distance 130.0 nm (15/75)
+Grids:
+r_ratio = 1.014, z_ratio = 1.014
+Setting up matrices:
+Solving...
+C = 1.66713e-15 F
+Done!
+0:00:18.169080
+Distance 132.0 nm (16/75)
+Grids:
+r_ratio = 1.014, z_ratio = 1.014
+Setting up matrices:
+Solving...
+C = 1.66692e-15 F
+Done!
+0:00:18.452886
+Distance 134.0 nm (17/75)
+Grids:
+r_ratio = 1.014, z_ratio = 1.014
+Setting up matrices:
+Solving...
+C = 1.66670e-15 F
+Done!
+0:00:17.915905
+Distance 136.0 nm (18/75)
+Grids:
+r_ratio = 1.014, z_ratio = 1.014
+Setting up matrices:
+Solving...
+C = 1.66649e-15 F
+Done!
+0:00:17.722836
+Distance 138.0 nm (19/75)
+Grids:
+r_ratio = 1.014, z_ratio = 1.014
+Setting up matrices:
+Solving...
+C = 1.66628e-15 F
+Done!
+0:00:18.523072
+Distance 140.0 nm (20/75)
+Grids:
+r_ratio = 1.014, z_ratio = 1.014
+Setting up matrices:
+Solving...
+C = 1.66607e-15 F
+Done!
+0:00:18.008778
+Distance 142.0 nm (21/75)
+Grids:
+r_ratio = 1.014, z_ratio = 1.014
+Setting up matrices:
+Solving...
+C = 1.66586e-15 F
+Done!
+0:00:18.357783
+Distance 144.0 nm (22/75)
+Grids:
+r_ratio = 1.014, z_ratio = 1.014
+Setting up matrices:
+Solving...
+C = 1.66565e-15 F
+Done!
+0:00:18.190785
+Distance 146.0 nm (23/75)
+Grids:
+r_ratio = 1.014, z_ratio = 1.014
+Setting up matrices:
+Solving...
+C = 1.66544e-15 F
+Done!
+0:00:18.051784
+Distance 148.0 nm (24/75)
+Grids:
+r_ratio = 1.014, z_ratio = 1.014
+Setting up matrices:
+Solving...
+C = 1.66523e-15 F
+Done!
+0:00:19.073428
+Distance 150.0 nm (25/75)
+Grids:
+r_ratio = 1.014, z_ratio = 1.014
+Setting up matrices:
+Solving...
+C = 1.66502e-15 F
+Done!
+0:00:18.525358
+Distance 152.0 nm (26/75)
+Grids:
+r_ratio = 1.014, z_ratio = 1.014
+Setting up matrices:
+Solving...
+C = 1.66482e-15 F
+Done!
+0:00:18.421762
+Distance 154.0 nm (27/75)
+Grids:
+r_ratio = 1.014, z_ratio = 1.014
+Setting up matrices:
+Solving...
+C = 1.66461e-15 F
+Done!
+0:00:19.038580
+Distance 156.0 nm (28/75)
+Grids:
+r_ratio = 1.014, z_ratio = 1.014
+Setting up matrices:
+Solving...
+C = 1.66440e-15 F
+Done!
+0:00:19.290282
+Distance 158.0 nm (29/75)
+Grids:
+r_ratio = 1.014, z_ratio = 1.014
+Setting up matrices:
+Solving...
+C = 1.66420e-15 F
+Done!
+0:00:19.418132
+Distance 160.0 nm (30/75)
+Grids:
+r_ratio = 1.014, z_ratio = 1.014
+Setting up matrices:
+Solving...
+C = 1.66399e-15 F
+Done!
+0:00:19.263882
+Distance 162.0 nm (31/75)
+Grids:
+r_ratio = 1.014, z_ratio = 1.014
+Setting up matrices:
+Solving...
+C = 1.66379e-15 F
+Done!
+0:00:20.632526
+Distance 164.0 nm (32/75)
+Grids:
+r_ratio = 1.014, z_ratio = 1.014
+Setting up matrices:
+Solving...
+C = 1.66359e-15 F
+Done!
+0:00:19.723235
+Distance 166.0 nm (33/75)
+Grids:
+r_ratio = 1.014, z_ratio = 1.014
+Setting up matrices:
+Solving...
+C = 1.66338e-15 F
+Done!
+0:00:21.276011
+Distance 168.0 nm (34/75)
+Grids:
+r_ratio = 1.014, z_ratio = 1.014
+Setting up matrices:
+Solving...
+C = 1.66318e-15 F
+Done!
+0:00:20.410335
+Distance 170.0 nm (35/75)
+Grids:
+r_ratio = 1.014, z_ratio = 1.014
+Setting up matrices:
+Solving...
+C = 1.66298e-15 F
+Done!
+0:00:19.551934
+Distance 172.0 nm (36/75)
+Grids:
+r_ratio = 1.014, z_ratio = 1.014
+Setting up matrices:
+Solving...
+C = 1.66278e-15 F
+Done!
+0:00:20.939564
+Distance 174.0 nm (37/75)
+Grids:
+r_ratio = 1.014, z_ratio = 1.014
+Setting up matrices:
+Solving...
+C = 1.66258e-15 F
+Done!
+0:00:19.967372
+Distance 176.0 nm (38/75)
+Grids:
+r_ratio = 1.014, z_ratio = 1.014
+Setting up matrices:
+Solving...
+C = 1.66238e-15 F
+Done!
+0:00:20.084971
+Distance 178.0 nm (39/75)
+Grids:
+r_ratio = 1.014, z_ratio = 1.014
+Setting up matrices:
+Solving...
+C = 1.66218e-15 F
+Done!
+0:00:19.091042
+Distance 180.0 nm (40/75)
+Grids:
+r_ratio = 1.014, z_ratio = 1.014
+Setting up matrices:
+Solving...
+C = 1.66198e-15 F
+Done!
+0:00:19.310301
+Distance 182.0 nm (41/75)
+Grids:
+r_ratio = 1.014, z_ratio = 1.014
+Setting up matrices:
+Solving...
+C = 1.66178e-15 F
+Done!
+0:00:20.558653
+Distance 184.0 nm (42/75)
+Grids:
+r_ratio = 1.014, z_ratio = 1.014
+Setting up matrices:
+Solving...
+C = 1.66158e-15 F
+Done!
+0:00:19.770959
+Distance 186.0 nm (43/75)
+Grids:
+r_ratio = 1.014, z_ratio = 1.014
+Setting up matrices:
+Solving...
+C = 1.66138e-15 F
+Done!
+0:00:20.465369
+Distance 188.0 nm (44/75)
+Grids:
+r_ratio = 1.014, z_ratio = 1.014
+Setting up matrices:
+Solving...
+C = 1.66119e-15 F
+Done!
+0:00:19.790489
+Distance 190.0 nm (45/75)
+Grids:
+r_ratio = 1.014, z_ratio = 1.014
+Setting up matrices:
+Solving...
+C = 1.66099e-15 F
+Done!
+0:00:20.195729
+Distance 192.0 nm (46/75)
+Grids:
+r_ratio = 1.014, z_ratio = 1.014
+Setting up matrices:
+Solving...
+C = 1.66079e-15 F
+Done!
+0:00:19.661184
+Distance 194.0 nm (47/75)
+Grids:
+r_ratio = 1.014, z_ratio = 1.014
+Setting up matrices:
+Solving...
+C = 1.66060e-15 F
+Done!
+0:00:20.256584
+Distance 196.0 nm (48/75)
+Grids:
+r_ratio = 1.014, z_ratio = 1.014
+Setting up matrices:
+Solving...
+C = 1.66040e-15 F
+Done!
+0:00:20.395433
+Distance 198.0 nm (49/75)
+Grids:
+r_ratio = 1.014, z_ratio = 1.014
+Setting up matrices:
+Solving...
+C = 1.66021e-15 F
+Done!
+0:00:21.570506
+Distance 200.0 nm (50/75)
+Grids:
+r_ratio = 1.014, z_ratio = 1.014
+Setting up matrices:
+Solving...
+C = 1.66001e-15 F
+Done!
+0:00:21.196633
+Distance 202.0 nm (51/75)
+Grids:
+r_ratio = 1.014, z_ratio = 1.014
+Setting up matrices:
+Solving...
+C = 1.65982e-15 F
+Done!
+0:00:21.144343
+Distance 204.0 nm (52/75)
+Grids:
+r_ratio = 1.014, z_ratio = 1.014
+Setting up matrices:
+Solving...
+C = 1.65962e-15 F
+Done!
+0:00:20.770064
+Distance 206.0 nm (53/75)
+Grids:
+r_ratio = 1.014, z_ratio = 1.014
+Setting up matrices:
+Solving...
+C = 1.65943e-15 F
+Done!
+0:00:21.434396
+Distance 208.0 nm (54/75)
+Grids:
+r_ratio = 1.014, z_ratio = 1.014
+Setting up matrices:
+Solving...
+C = 1.65924e-15 F
+Done!
+0:00:21.816745
+Distance 210.0 nm (55/75)
+Grids:
+r_ratio = 1.014, z_ratio = 1.014
+Setting up matrices:
+Solving...
+C = 1.65905e-15 F
+Done!
+0:00:21.833690
+Distance 212.0 nm (56/75)
+Grids:
+r_ratio = 1.014, z_ratio = 1.014
+Setting up matrices:
+Solving...
+C = 1.65885e-15 F
+Done!
+0:00:21.455435
+Distance 214.0 nm (57/75)
+Grids:
+r_ratio = 1.014, z_ratio = 1.014
+Setting up matrices:
+Solving...
+C = 1.65866e-15 F
+Done!
+0:00:20.384386
+Distance 216.0 nm (58/75)
+Grids:
+r_ratio = 1.014, z_ratio = 1.014
+Setting up matrices:
+Solving...
+C = 1.65847e-15 F
+Done!
+0:00:20.615502
+Distance 218.0 nm (59/75)
+Grids:
+r_ratio = 1.014, z_ratio = 1.014
+Setting up matrices:
+Solving...
+C = 1.65828e-15 F
+Done!
+0:00:21.355097
+Distance 220.0 nm (60/75)
+Grids:
+r_ratio = 1.014, z_ratio = 1.014
+Setting up matrices:
+Solving...
+C = 1.65809e-15 F
+Done!
+0:00:21.626976
+Distance 222.0 nm (61/75)
+Grids:
+r_ratio = 1.014, z_ratio = 1.014
+Setting up matrices:
+Solving...
+C = 1.65790e-15 F
+Done!
+0:00:22.169462
+Distance 224.0 nm (62/75)
+Grids:
+r_ratio = 1.014, z_ratio = 1.014
+Setting up matrices:
+Solving...
+C = 1.65771e-15 F
+Done!
+0:00:21.201792
+Distance 226.0 nm (63/75)
+Grids:
+r_ratio = 1.014, z_ratio = 1.014
+Setting up matrices:
+Solving...
+C = 1.65752e-15 F
+Done!
+0:00:21.866500
+Distance 228.0 nm (64/75)
+Grids:
+r_ratio = 1.014, z_ratio = 1.014
+Setting up matrices:
+Solving...
+C = 1.65734e-15 F
+Done!
+0:00:23.191529
+Distance 230.0 nm (65/75)
+Grids:
+r_ratio = 1.014, z_ratio = 1.014
+Setting up matrices:
+Solving...
+C = 1.65715e-15 F
+Done!
+0:00:21.986805
+Distance 232.0 nm (66/75)
+Grids:
+r_ratio = 1.014, z_ratio = 1.014
+Setting up matrices:
+Solving...
+C = 1.65696e-15 F
+Done!
+0:00:23.024976
+Distance 234.0 nm (67/75)
+Grids:
+r_ratio = 1.014, z_ratio = 1.014
+Setting up matrices:
+Solving...
+C = 1.65677e-15 F
+Done!
+0:00:22.921422
+Distance 236.0 nm (68/75)
+Grids:
+r_ratio = 1.014, z_ratio = 1.014
+Setting up matrices:
+Solving...
+C = 1.65659e-15 F
+Done!
+0:00:21.966566
+Distance 238.0 nm (69/75)
+Grids:
+r_ratio = 1.014, z_ratio = 1.014
+Setting up matrices:
+Solving...
+C = 1.65640e-15 F
+Done!
+0:00:22.407579
+Distance 240.0 nm (70/75)
+Grids:
+r_ratio = 1.014, z_ratio = 1.014
+Setting up matrices:
+Solving...
+C = 1.65621e-15 F
+Done!
+0:00:24.156712
+Distance 242.0 nm (71/75)
+Grids:
+r_ratio = 1.014, z_ratio = 1.014
+Setting up matrices:
+Solving...
+C = 1.65603e-15 F
+Done!
+0:00:24.643846
+Distance 244.0 nm (72/75)
+Grids:
+r_ratio = 1.014, z_ratio = 1.014
+Setting up matrices:
+Solving...
+C = 1.65584e-15 F
+Done!
+0:00:22.179772
+Distance 246.0 nm (73/75)
+Grids:
+r_ratio = 1.014, z_ratio = 1.014
+Setting up matrices:
+Solving...
+C = 1.65566e-15 F
+Done!
+0:00:23.397967
+Distance 248.0 nm (74/75)
+Grids:
+r_ratio = 1.014, z_ratio = 1.014
+Setting up matrices:
+Solving...
+C = 1.65547e-15 F
+Done!
+0:00:23.401447
+Exiting...
