@@ -15,6 +15,29 @@ f0 = st.number_input(label= "Resonance Frequency (Fc) Hz" , value= 66500)
 
 # Heading for tip model parameters...
 
+def set_parameters(model, data_class_as_dict):
+    for label, val in data_class_as_dict.items():
+        setattr(model, label, st.number_input(label, value=val))
+
+
+st.markdown("""## Tip and Sample Parameters""")
+params_sample = cap.ParamsSample(Nr=900, Nz_plus=900)
+set_parameters(params_sample, asdict(params_sample))
+
+cp_sample = cap.CapSolSample(params_sample)
+
+with st.form(key = "sample"):
+    submit = st.form_submit_button()
+
+if 'out' not in st.session_state:
+    st.session_state.out = None
+
+if submit:
+    cp_sample.run()
+    st.session_state.out =  cp_sample.c
+
+st.markdown(f"{st.session_state.out} F")
+
 
 c = 4e-14
 # c=st.number_input(label= "C(F)" , value= 4E-14, format="%.3e")
@@ -27,6 +50,7 @@ c = 4e-14
 
 @dataclass
 class RCModel:
+    """The parallel RC sample model."""
     Rsample : float = 1e12
     Csample : float = 4e-14
 
@@ -35,14 +59,12 @@ class RCModel:
         return 1.0/(1.0/self.Rsample+s*self.Csample)
 
 
+
+
 if "models" not in st.session_state:
     st.session_state.models = {'RC': dict(model=RCModel(),
                                         description="RC Model assumes the sample is a parallel resistor (Rsample) and capacitor (Csample).",
                                         image="image.png")}
-
-# models = {'RC': dict(parameters= dict(Rsample=1E12, Csample=4e-14),
-                        # image=
-
 
 selected_model_name = st.selectbox("Sample Model", list(st.session_state.models.keys()))
 
