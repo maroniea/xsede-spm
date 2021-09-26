@@ -4,6 +4,51 @@ import numpy as np
 import capsol.capsol as cap
 import matplotlib.pyplot as plt
 
+
+# https://discuss.streamlit.io/t/cannot-print-the-terminal-output-in-streamlit/6602/9?u=ryanpdwyer
+from contextlib import contextmanager
+from io import StringIO
+from streamlit.report_thread import REPORT_CONTEXT_ATTR_NAME
+from threading import current_thread
+import streamlit as st
+import sys
+
+
+@contextmanager
+def st_redirect(src, dst):
+    placeholder = st.empty()
+    output_func = getattr(placeholder, dst)
+
+    with StringIO() as buffer:
+        old_write = src.write
+
+        def new_write(b):
+            if getattr(current_thread(), REPORT_CONTEXT_ATTR_NAME, None):
+                buffer.write(b)
+                output_func(buffer.getvalue())
+            else:
+                old_write(b)
+
+        try:
+            src.write = new_write
+            yield
+        finally:
+            src.write = old_write
+
+
+@contextmanager
+def st_stdout(dst):
+    with st_redirect(sys.stdout, dst):
+        yield
+
+
+@contextmanager
+def st_stderr(dst):
+    with st_redirect(sys.stderr, dst):
+        yield
+
+
+
 st.title("Connecting impedance model to Capsol Simulations")
 
 # Add nice heading for cantilever
@@ -21,7 +66,7 @@ def set_parameters(model, data_class_as_dict):
 
 
 st.markdown("""## Tip and Sample Parameters""")
-params_sample = cap.ParamsSample(Nr=900, Nz_plus=900)
+params_sample = cap.ParamsSample(Nr=500, Nz_plus=500)
 set_parameters(params_sample, asdict(params_sample))
 
 cp_sample = cap.CapSolSample(params_sample)
@@ -33,7 +78,9 @@ if 'out' not in st.session_state:
     st.session_state.out = None
 
 if submit:
-    cp_sample.run()
+    st.markdown("Capsolpy output: ")
+    with st_stdout("code"):
+        cp_sample.run()
     st.session_state.out =  cp_sample.c
 
 st.markdown(f"{st.session_state.out} F")
