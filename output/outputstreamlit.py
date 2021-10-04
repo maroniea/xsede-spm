@@ -66,24 +66,62 @@ def set_parameters(model, data_class_as_dict):
 
 
 st.markdown("""## Tip and Sample Parameters""")
-params_sample = cap.ParamsSample(Nr=500, Nz_plus=500)
-set_parameters(params_sample, asdict(params_sample))
+params_sample = cap.AllParams(Nr=500, Nz_plus=500, istep=2, dmin=5.0, dmax=8.0, h0=0.5)
+with st.expander("CapSol Simulation Parameters"):
+    params_to_set = asdict(params_sample)
+    for param in ['pt', 'dmax']:
+        params_to_set.pop(param)
+    set_parameters(params_sample, params_to_set)
 
-cp_sample = cap.CapSolSample(params_sample)
+params_sample.dmax = params_sample.dmin + params_sample.h0 * params_sample.istep * 3
+
+cp_sample = cap.CapSolAll(params_sample)
+
 
 with st.form(key = "sample"):
     submit = st.form_submit_button()
 
+st.markdown(f"""### Ratios
+
+Should be 1.01 or less:
+
+r_ratio: {cp_sample.r_ratio:.4f} (increase n to improve)
+
+z_ratio: {cp_sample.z_ratio:.4f} (increase Nz_plus to improve)
+
+""")
+
 if 'out' not in st.session_state:
     st.session_state.out = None
+
+if 'out_z' not in st.session_state:
+    st.session_state.out_z = None
+
+if 'out_zz' not in st.session_state:
+    st.session_state.out_zz = None
 
 if submit:
     st.markdown("Capsolpy output: ")
     with st_stdout("code"):
         cp_sample.run()
-    st.session_state.out =  cp_sample.c
+    st.session_state.out =  cp_sample.C
+    st.session_state.out_z =  np.gradient(cp_sample.C) / (cp_sample.params.h0*cp_sample.params.istep*1e-9)
+    st.session_state.out_zz =  np.gradient(st.session_state.out_z) / (cp_sample.params.h0*cp_sample.params.istep*1e-9)
 
-st.markdown(f"{st.session_state.out} F")
+if st.session_state.out is not None:
+    C = st.session_state.out[1]
+    Cz = st.session_state.out_z[1]
+    Czz = st.session_state.out_zz[1]
+    delta_Czz = 2*Cz**2 / C
+    Czz_q = Czz - delta_Czz
+    alpha_qosc = delta_Czz/Czz
+    st.markdown("### CapSolPy results")
+    st.markdown(f"$C$ = {C:.4e} F")
+    st.markdown(f"$C'$ = {Cz:.4e} F/m")
+    st.markdown(f"$C''$ = {Czz:.4e} F/m²")
+    st.markdown(f"$C_q''$ = {Czz_q:.4e} F/m²")
+    st.markdown(f"$\\Delta C''$ = {delta_Czz:.4e} F/m²")
+    st.markdown(f"$\\alpha_\\mathrm{{q-osc}}$ = {alpha_qosc:.3f}")
 
 
 c = 4e-14
