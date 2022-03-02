@@ -286,3 +286,6 @@ def run():
 # ax.semilogx((fm/f0), abs(df.real))
 # ax.semilogx((fm/f0), df.imag)
 # st.pyplot(fig)
+
+if __name__ == "__main__":
+    run()

@@ -71,14 +71,15 @@ def find_ratio(total, h0, terms):
         r += 0.00001
     return r
 
-def guni_grid(nuni, n, h0, grid_max):
+def guni_grid(nuni: int, n: int, h0: float, grid_max: float):
     """Generates geometric grid which can be used for the radial and z directions. 
     
     nuni: number of uniform grid points 
     n: number of gird points
     h0: initial grid spacing
     grid_max: rho_max or z_max, maximum grid size"""
-    
+    n = int(n)
+    nuni = int(nuni)
     
     r = np.zeros(n+1)
     dr = np.zeros(n) # Could also use n+1
