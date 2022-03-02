@@ -12,6 +12,10 @@
 import numpy as np
 import matplotlib as plt
 from scipy import signal 
+import pandas as pd
+from os import path
+
+
 
 
 def get_gridparameters(f_name): 
@@ -73,14 +77,11 @@ def get_gridparameters(f_name):
     #units in nm 
 
 
-
 def process_data(params, data, smoothing= False, std=5*10**-9, fortran=True):
     if fortran:
         z_over_r= data[: , 0]
         r= params['Rtip']
         z= (z_over_r*r)
-
-
         c_over_pie0R= data[:, 2]
         e0= 8.854E-12 
         c= (c_over_pie0R*np.pi*e0*r)*10**-9
@@ -89,6 +90,7 @@ def process_data(params, data, smoothing= False, std=5*10**-9, fortran=True):
         c=data[:, 1]
 
     dz= (z[1]-z[0])*10**-9
+
     if smoothing:
          N_sigma = int(std/dz) #standard deviation in data points
          gaussian_smoothing= signal.gaussian(6*N_sigma, N_sigma)
@@ -103,6 +105,8 @@ def process_data(params, data, smoothing= False, std=5*10**-9, fortran=True):
          czz= np.gradient(cz, dz)
          alpha=(2*(cz**2/c)/czz)
          return dict(z=z , c=c, cz=cz , czz=czz , alpha = alpha)
+
+
 # import matplotlib.pyplot as plt
 # plt.plot(z , cz)
 # plt.ylabel("C'(m)")
@@ -115,3 +119,16 @@ def process_data(params, data, smoothing= False, std=5*10**-9, fortran=True):
 # fig.show()
 # plt.show()
 
+
+def process_python(folder):
+    params = get_gridparameters(path.join(folder, 'capsol.in'))
+    data = np.loadtxt(path.join(folder, 'C-Z.dat'))
+    processed_data = process_data(params, data, smoothing=False, std=5*10**-9, fortran=False)
+    params['program'] = 'Python'
+    params['folder'] = folder
+    return dict(params=params, data=processed_data)
+
+def sim_to_dataframe(sim_output):
+    valid_data = {key: val[2:-2] for key, val in sim_output['data'].items()}
+    merged_out = {**sim_output['params'], **valid_data}
+    return pd.DataFrame(merged_out)

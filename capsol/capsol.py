@@ -16,7 +16,6 @@ from dataclasses import dataclass
 # R, Z = np.meshgrid(rs, zs) # z_size by r_size.
 
 
-# 
 def sphere(r, z, Rtip):
     """Check if grid points are in the tip sphere.
     

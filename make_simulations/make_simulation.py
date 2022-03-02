@@ -12,8 +12,6 @@ import glob
 import itertools
 import capsol.capsol as cap
 
-import SessionState 
-
 
 # Helper functions used later in the file
 
@@ -59,7 +57,22 @@ def write_inputfile(p):
    LAPACK  {p['Test']}  {p['Verbosity']} 
    {p['Nuni']}  {str(p['Equally spaced'])[0]}"""
 
-state = SessionState.get(folder=os.path.abspath('.'))
+
+@st.cache
+def check_grids(gp):
+    params=cap.Params(Rtip=gp["Rtip"], theta_deg=gp["half-angle"],Hcone=gp["HCone"], Hcant=gp["thickness_Cantilever"], Rcant=gp["RCantilever"],
+                    zMax=gp["z_max"],rhoMax=gp["rho_max"], h0=gp["h0"], d=gp["min"], Nuni=gp["Nuni"],
+                        Nr=gp["n"], Nz_plus=gp["m+"],hsam=gp["Thickness_sample"])
+
+    sim = cap.CapSol(params)
+    st.markdown("Both ratios should be about 1.01 at most.")
+    st.markdown(f"R_ratio = {sim.r_ratio} (increase n to improve)")
+    st.markdown(f"Z_ratio =  {sim.z_ratio} (increase m+ to improve)")
+
+
+
+if 'folder' not in st.session_state:
+    st.session_state.folder = os.path.abspath('.')
 
 st.title("Create CapSol Simulation Input files")
 
@@ -68,8 +81,8 @@ st.markdown("""Combine scans to create a grid of simulation data points.
     4³ = 64 input files will be created.""")
 
 # TO DO: Add the remaining variables and their default values...
-default_params = {'n': 500,
- 'm+': 500,
+default_params = {'n': 900,
+ 'm+': 900,
  'm-': 20,
  'h0': 0.5,
  'rho_max': 1000000.0,
@@ -86,8 +99,8 @@ default_params = {'n': 500,
  'Thickness_sample': 10.0,
  'Test': 0,
  'Verbosity': 0,
- 'Nuni': 1,
- 'Equally spaced': False}
+ 'Nuni': 50,
+ 'Equally spaced': True}
 
 # Infer from the default values
 parameter_types = {key: type(val) for key, val in default_params.items()}
@@ -105,26 +118,32 @@ any parameters that you vary will be overwritten by your choices below.
 
 # parameter 
 
+
 # We want to set step = 1 if the type is int, leave step = None otherwise 
 updated_default_params = {}
-for key, val in default_params.items():
-    if parameter_types[key] == int:
-        updated_default_params[key] = st.number_input(key,
-                            value=val, step=1, 
-                            format=formatter(
-                                parameter_types[key]))
-    elif parameter_types[key]==bool:
-        updated_default_params[key] = st.checkbox(key, value=val)
-    else:
-        updated_default_params[key] = st.number_input(key,
-                            value=val,
-                            format=formatter(
-                                parameter_types[key]))
+
+
+with st.expander(label="Default parameters"):
+    for key, val in default_params.items():
+        if parameter_types[key] == int:
+            updated_default_params[key] = st.number_input(key,
+                                value=val, step=1, 
+                                format=formatter(
+                                    parameter_types[key]))
+        elif parameter_types[key]==bool:
+            updated_default_params[key] = st.checkbox(key, value=val)
+        else:
+            updated_default_params[key] = st.number_input(key,
+                                value=val,
+                                format=formatter(
+                                    parameter_types[key]))
 
 
 st.markdown("## Setup Scans")
 
 n_scans = st.number_input("Number of experimental scans:", 1, 5, 1, 1)
+
+
 
 n_simulations = [] # The number of simulations for each scan
 n_parameters = [] # The number of parameters varied in each scan
@@ -153,7 +172,7 @@ for i in range(n_scans):
     n_param = st.number_input(f"S{i+1} Parameters to vary at once:", 1, 5, 1)
     n_parameters.append(n_param)
 
-    cols = st.beta_columns(n_param)
+    cols = st.columns(n_param)
 
     params = []
     values = [] 
@@ -171,22 +190,15 @@ for i in range(n_scans):
 
     all_params_values.append([{param: val for param, val in zip(params, val_row)} for val_row in zip(*values)])
 
+
+
 st.markdown("## Grid information")
 simulation_inputs = [merge_dicts(dicts) for dicts in itertools.product(*all_params_values)]
 
-# For loop here!
-# for i, sim in enumerate(simulation_inputs):
 gp = copy.copy(updated_default_params)
-gp.update(simulation_inputs[0]) # Assign nsew parameter values...
-params=cap.Params(Rtip=gp["Rtip"], theta_deg=gp["half-angle"],Hcone=gp["HCone"], Hcant=gp["thickness_Cantilever"], Rcant=gp["RCantilever"],
-                   zMax=gp["z_max"],rhoMax=gp["rho_max"], h0=gp["h0"], d=gp["min"], Nuni=gp["Nuni"],
-                    Nr=gp["n"], Nz_plus=gp["m+"],hsam=gp["Thickness_sample"])
+gp.update(simulation_inputs[0])
 
-sim = cap.CapSol(params)
-st.markdown("Both ratios should be about 1.01 at most.")
-st.markdown(f"R_ratio = {sim.r_ratio} (increase n to improve)")
-st.markdown(f"Z_ratio =  {sim.z_ratio} (increase m+ to improve)")
-
+check_grids(gp) 
 
 
 st.header("Output information")
@@ -195,26 +207,26 @@ base_name = st.text_input("Output base filename")
 
 st.markdown("### Output Folder")
 
-st.markdown(f'**Selected folder:** {state.folder}')
+st.markdown(f'**Selected folder:** {st.session_state.folder}')
 
 st.write(f'Select another directory (up or down) below:')
 
-left_col, right_col = st.beta_columns(2)
+left_col, right_col = st.columns(2)
                     
 with right_col:
     up_directory = st.button("↑📁")
     enter_directory = st.button("→")
 
 if up_directory:
-    state.folder = os.path.dirname(state.folder)
+    st.session_state.folder = os.path.dirname(st.session_state.folder)
     st.experimental_rerun() # Restart the whole script to update everything
 
 with left_col:
     save_location = folder_selector("Choose a folder",
-                                    state.folder)
+                                    st.session_state.folder)
 if enter_directory:
     if save_location:
-        state.folder = os.path.join(state.folder, save_location.rstrip('/\\'))
+        st.session_state.folder = os.path.join(st.session_state.folder, save_location.rstrip('/\\'))
         st.experimental_rerun() # Restart the whole script to update everything
 
 # A little information about the number of simulation files that will be created.
@@ -258,8 +270,8 @@ if write_simulations:
             output_filename = base_name+f"-{i:04d}"+'.in' # :04d formats the number as an integer with leading zeros so it is 4 digits long 
             
             # These two lines can be removed once we actually write the files  
-            st.write(output_filename)        
-            st.write(new_params) 
+            # st.write(output_filename)        
+            # st.write(new_params) 
             st.text(write_inputfile(new_params))
             # Then once you have each string, open the file (by combining the folder and the filename, see os.path.join)
             # 
