@@ -137,7 +137,7 @@ class ZElements:
 
 
 
-Zdef = dict(R=100.0, C=1.0, W=10.0, P=1.0, n=0.5, L=10.0)
+Zdef = dict(R=1e7, C=1.0e-7, W=10.0, P=1.0, n=0.5, L=10.0)
 
 def impedance(x):
     try:
@@ -303,11 +303,13 @@ class Tip:
     Czz: float = None
     alpha_qosc: float = None
     f0: float = None
+    k0: float = None
+    Q: float = None
 
     
     @property
     def Cz(self):
-        return np.sqrt(self.alpha_qosc * self.Czz * self.C / 2)
+        return -np.sqrt(self.alpha_qosc * self.Czz * self.C / 2)
     
     @property
     def Delta_Czz(self):
@@ -317,7 +319,9 @@ class Tip:
     def Czz_q(self):
         return (1.0 - self.alpha_qosc) * self.Czz
 
-
+    @property
+    def Gamma_i(self):
+        return 1e6 * self.k0 / (self.Q * 2 * np.pi * self.f0)
 
 
 class ImpedanceMod:
@@ -390,13 +394,59 @@ class KPFMModel:
         self.impedance = impedance
     
     def H(self, f, *params):
-        Z_tip = 1.0/(self.tip.C*2j*np.pi*f*1e-6)# Convert Hz to MHz (done automatically in self.impedance.Zkw)
-        return Z_tip / (Z_tip + self.impedance.Zfunc(f, *params))
+        return 1.0 / (1.0 + 2.0j*np.pi*(f*1e-6)*self.tip.C*self.impedance.Zfunc(f, *params))
     
     def Hbar(self, fm, f0, *params):
         return (self.H(fm+f0, *params) + self.H(fm-f0, *params))/2.0
     
-    # def LDS_2fm(self, fm):
+    def LDS_2fm(self, fm, *params):
+        # mV is the voltage unit...
+        # This is still in MHz (really small) - need to convert to Hz
+        # st.write(self.tip.f0)
+        # st.write(self.H(1.0, *params))
+        # st.write(self.impedance.Zfunc(1.0, *params))
+        # st.write(2.0j*np.pi*(self.tip.f0*1e-6)*self.impedance.Zfunc(1.0, *params))
+        return (self.tip.f0 * (5000**2) / (8*self.tip.k0) * self.H(fm, *params)**2 * 
+                (self.tip.Czz_q + self.tip.Delta_Czz * self.Hbar(fm, self.tip.f0, *params)))
+
+    def BLDS_fm(self, fm, *params):
+        t = self.tip
+        pre_factor = t.f0 *  1000 ** 2 / (16 * t.k0)
+        abs_H_sq = abs(self.H(fm, *params))**2
+        return pre_factor * (t.Czz_q + t.Delta_Czz * np.real(self.Hbar(fm, t.f0, *params))) * abs_H_sq
+
+    def curvature(self, *params):
+        t = self.tip
+        pre_factor = t.f0 / (4*t.k0)
+        return pre_factor * (t.Czz_q + t.Delta_Czz *self.H(t.f0, *params).real) * 1e6
+    
+    def dissip(self, *params):
+        t = self.tip
+        pre_factor = 1 / (4*t.f0*1e-6*np.pi)
+        return pre_factor * t.Delta_Czz * self.H(t.f0, *params).imag * 1e6
+
+def plotLDS(mod, fm, params):
+    fig, ax = plt.subplots(nrows=2, sharex=True)
+    LDS_2fm = mod.LDS_2fm(fm, *params)
+    ax[0].semilogx(fm, LDS_2fm.real)
+    ax[1].semilogx(fm, -LDS_2fm.imag)
+
+    ax[1].set_xlabel('Frequency (Hz)')
+    ax[0].set_ylabel('Re $\\Delta f(2f_m)$ (Hz/V²)')
+    ax[1].set_ylabel('-Im $\\Delta f(2f_m)$ (Hz/V²)')
+
+    return fig, ax
+
+def plotBLDS(mod: KPFMModel, fm: np.ndarray, params):
+    fig, ax = plt.subplots()
+    BLDS = mod.BLDS_fm(fm, *params)
+    ax.semilogx(fm, BLDS)
+
+    ax.set_xlabel('Frequency (Hz)')
+    ax.set_ylabel('$\\Delta f(f_m)$ (Hz/V²)')
+
+
+    return fig, ax
 
 
 
@@ -431,11 +481,20 @@ This page fits KPFM impedance spectroscopy data to a circuit chosen below.
 
 
 
-    ftip = st.number_input("Cantilever Resonance frequency (kHz)", value=100e3)
-    ftip_MHz = ftip*1e-3 # Convert to MHz (the default unit below for impedance)
+    ftip = st.number_input("Cantilever Resonance frequency (kHz)", value=100)
+    f0_Hz = ftip*1e3 # Convert to Hz (the default unit below for impedance)
 
-    tip = Tip(C=Ctip_uF, Czz=Czz_uF, alpha_qosc=alpha_qosc, f0=ftip_MHz)
+    k_c = st.number_input("Cantilever spring constant (N/m)", value=3.0)
 
+    k_c_uN_um = k_c # No unit conversion needed
+
+    Q = st.number_input("Quality factor Q (unitless)", value=3000.0)
+
+    tip = Tip(C=Ctip_uF, Czz=Czz_uF, alpha_qosc=alpha_qosc, f0=f0_Hz, k0=k_c_uN_um, Q=Q)
+
+
+    st.write(tip)
+    st.write(f"Tip Cz: {tip.Cz} uF/um")
 
 
 
@@ -478,19 +537,17 @@ C1 would be written `(R1-R2)//C1`""")
     kmod = KPFMModel(tip=tip, impedance=mod)
 
 
-    st.markdown("""## Load Experimental Data""")
+    # st.markdown("""## Load Experimental Data""")
 
-    experiments = ['LDS', 'BLDS', "Freq & Amplitude Parabolas"]
-
-    experiment = st.selectbox("Select experiment", experiments)
 
 
     # files = [st.file_uploader("Load Experimental Data", accept_multiple_files=False)]
 
-    data = []
-    labels = []
-    # Process each file...
-    files = []
+    # data = []
+    # labels = []
+    # # Process each file...
+    # files = []
+
 #     if None not in files:
 #         st.write(files)
 
@@ -569,11 +626,13 @@ C1 would be written `(R1-R2)//C1`""")
     #     a2.plot(d[x_column], -d[y_column], '.', label=label)
     #     a2.plot(Z_fit.real, -Z_fit.imag , label=label+' fit')
     
+
+    st.markdown("### Transfer function $H$")
     if plotModel:
         a2.plot(out.real, -out.imag, label='Model', color='0')
 
-    a2.set_xlabel("$ Z' $ (ohm)")
-    a2.set_ylabel("$-Z''$ (ohm)")
+    a2.set_xlabel("Re $H$")
+    a2.set_ylabel("-Im $H$")
     a2.set_aspect('equal', 'box')
     a2.legend()
     f2.tight_layout()
@@ -586,36 +645,54 @@ C1 would be written `(R1-R2)//C1`""")
     f_r, ax_r = plt.subplots()
 
     color_cycle = ax._get_lines.prop_cycler
-    for d, fit, label in zip(data, fits, labels):
-        Z_fit = mod.Zfunc(d[f_column].values, **fit.best_values)
-        l1, = ax.semilogx(d[f_column], d[x_column], '.', label=label+' Z\'')
-        new_color = next(color_cycle)['color']
-        l2 = ax.scatter(d[f_column], -d[y_column], s=6, marker='o',fc='none', ec=new_color, label=label+' -Z\"')
+    # for d, fit, label in zip(data, fits, labels):
+    #     Z_fit = mod.Zfunc(d[f_column].values, **fit.best_values)
+    #     l1, = ax.semilogx(d[f_column], d[x_column], '.', label=label+' Z\'')
+    #     new_color = next(color_cycle)['color']
+    #     l2 = ax.scatter(d[f_column], -d[y_column], s=6, marker='o',fc='none', ec=new_color, label=label+' -Z\"')
         
-        ax.semilogx(d[f_column], Z_fit.real, '-', color=l1.get_color(), label=label+" $Z'$ mod")
-        ax.semilogx(d[f_column], -Z_fit.imag, '--', color=new_color, label=label+" $-Z''$ mod")
+    #     ax.semilogx(d[f_column], Z_fit.real, '-', color=l1.get_color(), label=label+" $Z'$ mod")
+    #     ax.semilogx(d[f_column], -Z_fit.imag, '--', color=new_color, label=label+" $-Z''$ mod")
 
-        ax_r.semilogx(d[f_column], d[x_column].values - Z_fit.real, '.', color=l1.get_color(), label="$Z'$")
-        ax_r.scatter(d[f_column], -d[y_column].values + Z_fit.imag, s=6, marker='o', ec=new_color, fc='none', label="$Z''$")
+    #     ax_r.semilogx(d[f_column], d[x_column].values - Z_fit.real, '.', color=l1.get_color(), label="$Z'$")
+    #     ax_r.scatter(d[f_column], -d[y_column].values + Z_fit.imag, s=6, marker='o', ec=new_color, fc='none', label="$Z''$")
 
     # Model
     if plotModel:
-        ax.semilogx(freqs, out.real, color='0', label="Model $Z'$")
-        ax.semilogx(freqs, -out.imag,  '--', color='0',label="Model $-Z''$")
+        ax.semilogx(freqs, out.real, color='0', label="Model $H'$")
+        ax.semilogx(freqs, -out.imag,  '--', color='0',label="Model $-H''$")
     
     for ax_ in [ax, ax_r]:
         ax_.set_xlabel("Frequency (Hz)")
         ax_.legend()
 
-    ax.set_ylabel("$Z$ (ohm)")
-    ax_r.set_ylabel("Resid. $r = Z - Z_\\mathrm{model}$(ohm)")
+    ax.set_ylabel("$H$")
+    # ax_r.set_ylabel("Resid. $r = Z - Z_\\mathrm{model}$(ohm)")
 
     st.pyplot(fig)
 
     st.pyplot(f_r)
 
-    if None not in files:
-        st.download_button(label="Download Report", data=html_output(fig, f2, f_r, d2, fits, files, data, cis), file_name='report.html')
+    st.markdown("### KPFM Experimental Results")
+
+    experiments = {'LDS':plotLDS,
+                    'BLDS': plotBLDS
+                    }
+
+    experiment = st.selectbox("Select experiment", list(experiments.keys()))
+
+    f3, a3 = experiments[experiment](kmod, freqs, param_values)
+    st.pyplot(f3)
+    
+    st.markdown("### KPFM Curv. and Dissipation")
+    curv = kmod.curvature(*param_values)
+    dissip = kmod.dissip(*param_values)
+    st.write(f"Curvature (Hz/V²): {curv}")
+    st.write(f"Dissipation (pN s m⁻¹ V⁻²): {-dissip*1e6}")
+    st.write(f"Sample dissipation/Intrinsic dissipation × 1000 =  {-dissip/kmod.tip.Gamma_i * 1000:.3f}")
+
+    # if None not in files:
+    #     st.download_button(label="Download Report", data=html_output(fig, f2, f_r, d2, fits, files, data, cis), file_name='report.html')
     
 
 if __name__ == '__main__':
