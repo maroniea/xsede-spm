@@ -297,6 +297,29 @@ def draw_string(x, d):
         element = cDict[x[0]]
         d += element(label=x)
 
+@dataclass
+class Tip:
+    C: float = None
+    Czz: float = None
+    alpha_qosc: float = None
+    f0: float = None
+
+    
+    @property
+    def Cz(self):
+        return np.sqrt(self.alpha_qosc * self.Czz * self.C / 2)
+    
+    @property
+    def Delta_Czz(self):
+        return self.alpha_qosc * self.Czz
+    
+    @property
+    def Czz_q(self):
+        return (1.0 - self.alpha_qosc) * self.Czz
+
+
+
+
 class ImpedanceMod:
 
     f = sm.symbols('f')
@@ -358,7 +381,25 @@ class ImpedanceMod:
     @property
     def param_names(self):
         return [p.name for p in self.params_sorted]
+
+
+
+class KPFMModel:
+    def __init__(self, tip: Tip, impedance: ImpedanceMod):
+        self.tip = tip
+        self.impedance = impedance
     
+    def H(self, f, *params):
+        Z_tip = 1.0/(self.tip.C*2j*np.pi*f*1e-6)# Convert Hz to MHz (done automatically in self.impedance.Zkw)
+        return Z_tip / (Z_tip + self.impedance.Zfunc(f, *params))
+    
+    def Hbar(self, fm, f0, *params):
+        return (self.H(fm+f0, *params) + self.H(fm-f0, *params))/2.0
+    
+    # def LDS_2fm(self, fm):
+
+
+
 def circuit_from_string(string):
     str_to_eval = re.sub('([a-zA-Z0-9]+)', "E('\\1')", string)
     return eval(str_to_eval)
@@ -380,20 +421,20 @@ This page fits KPFM impedance spectroscopy data to a circuit chosen below.
     Ctip = st.number_input("Tip capacitance (pF)", value=1e-3, format="%.3e")
     Ctip_uF = Ctip*1e-6 # Convert to uF
     
-    Cz = st.number_input("C' 1st deriv. capacitance (pF/um)", value=1e-3, format="%.3e")
-
 
     Czz = st.number_input("C'' 2nd deriv. capacitance (pF/um²)", value=1e-3, format="%.3e")
 
-    alpha_qosc = st.number_input("alpha_qosc", value=0.5) 
+    Czz_uF = Czz*1e-6 # Convert to uF
 
-    tip_model = Munch(C=8.52e-15, Cz=-3.51e-10, Czz=4.75e-3, delta_Czz=2.88e-5, Czz_q=4.73e-3,
-        alpha_qosc=0.0065)
+    alpha_qosc = st.number_input("alpha_qosc", value=0.5, min_value=0.0, max_value=1.0)
+
+
+
 
     ftip = st.number_input("Cantilever Resonance frequency (kHz)", value=100e3)
     ftip_MHz = ftip*1e-3 # Convert to MHz (the default unit below for impedance)
 
-
+    tip = Tip(C=Ctip_uF, Czz=Czz_uF, alpha_qosc=alpha_qosc, f0=ftip_MHz)
 
 
 
@@ -434,7 +475,7 @@ C1 would be written `(R1-R2)//C1`""")
     st.markdown("Sample impedance:")
     st.write(mod.Z)
         
-
+    kmod = KPFMModel(tip=tip, impedance=mod)
 
 
     st.markdown("""## Load Experimental Data""")
@@ -494,24 +535,24 @@ C1 would be written `(R1-R2)//C1`""")
                         format='%.2e') for x in mod.params_sorted]
 
     if plotModel:
-        out = mod.Zfunc(freqs, *param_values)
+        out = kmod.H(freqs, *param_values)
 
     fits = []
     cis = []
-    for label, d in zip(labels, data):
-        y_data = np.r_[d[x_column].values, d[y_column].values]
-        param_items = dict(zip(mod.param_names, param_values))
-        pars = mod.create_model(**param_items)
-        f_data = d[f_column].values
-        result = mod.ZModel.fit(y_data, pars, f=f_data)
-        def func(kwargs):
-            return mod.ZModel.eval(f=f_data, **kwargs) - y_data
-        minimizer = lm.Minimizer(func, result.params)
-        ci = lm.conf_interval(minimizer, result, sigmas=[1, 2])
-        cis.append(ci)
-        fits.append(
-            result
-        )
+    # for label, d in zip(labels, data):
+    #     y_data = np.r_[d[x_column].values, d[y_column].values]
+    #     param_items = dict(zip(mod.param_names, param_values))
+    #     pars = mod.create_model(**param_items)
+    #     f_data = d[f_column].values
+    #     result = mod.ZModel.fit(y_data, pars, f=f_data)
+    #     def func(kwargs):
+    #         return mod.ZModel.eval(f=f_data, **kwargs) - y_data
+    #     minimizer = lm.Minimizer(func, result.params)
+    #     ci = lm.conf_interval(minimizer, result, sigmas=[1, 2])
+    #     cis.append(ci)
+    #     fits.append(
+    #         result
+    #     )
     
     st.markdown("""## Results""")
 
@@ -522,11 +563,11 @@ C1 would be written `(R1-R2)//C1`""")
 
     f2, a2 = plt.subplots()
 
-    for d, fit, label in zip(data, fits, labels):
-        # st.write(fit.best_values)
-        Z_fit = mod.Zfunc(d[f_column].values, **fit.best_values)
-        a2.plot(d[x_column], -d[y_column], '.', label=label)
-        a2.plot(Z_fit.real, -Z_fit.imag , label=label+' fit')
+    # for d, fit, label in zip(data, fits, labels):
+    #     # st.write(fit.best_values)
+    #     Z_fit = mod.Zfunc(d[f_column].values, **fit.best_values)
+    #     a2.plot(d[x_column], -d[y_column], '.', label=label)
+    #     a2.plot(Z_fit.real, -Z_fit.imag , label=label+' fit')
     
     if plotModel:
         a2.plot(out.real, -out.imag, label='Model', color='0')
