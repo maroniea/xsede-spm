@@ -9,3 +9,4 @@ munch==2.5.0
 sympy==1.9
 lmfit==1.0.3
 schemdraw==0.14
+openpyxl==3.0.9
