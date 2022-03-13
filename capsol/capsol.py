@@ -5,6 +5,7 @@ from numpy.lib.arraysetops import union1d
 from scipy import linalg
 from scipy import sparse
 from scipy.sparse import linalg as la
+from scipy import interpolate
 from tqdm import tqdm
 import time
 import copy
@@ -75,7 +76,7 @@ def guni_grid(nuni: int, n: int, h0: float, grid_max: float):
     """Generates geometric grid which can be used for the radial and z directions. 
     
     nuni: number of uniform grid points 
-    n: number of gird points
+    n: number of grid points
     h0: initial grid spacing
     grid_max: rho_max or z_max, maximum grid size"""
     n = int(n)
@@ -657,6 +658,11 @@ class AllParams:
     def d(self) -> float:
         return self.ds[self.pt]
 
+def find_percentile(x, r, percentile=90):
+    y = np.cumsum(x)/sum(x)
+    r_sq = r**2
+    f = interpolate.interp1d(y, np.sqrt(0.5*(r_sq[1:] + r_sq[:-1])), kind='quadratic')
+    return f(percentile/100.0)
 
 class CapSolAll:
     def __init__(self, params: AllParams):
@@ -731,7 +737,17 @@ class CapSolAll:
 
         self.energy = 0.5 * np.sum(dV * self.eps_z.reshape((-1, 1)) * abs(E_field(self.u, self.r, self.z))**2) * 1e-9 * 8.854e-12
 
+        energy_density_r = (0.5 * dV * self.eps_z.reshape((-1, 1)) * abs(E_field(self.u, self.r, self.z))**2 * 1e-9 * 8.854e-12).sum(axis=0)
+        
+        self.A_e_pt = find_percentile(energy_density_r, self.r)**2 * np.pi
+
         self.energy_z = 0.5 * np.sum(dV * self.eps_z.reshape((-1, 1)) * E_field(self.u, self.r, self.z).imag**2) * 1e-9 * 8.854e-12
+
+        energy_density_z = (0.5 * dV * self.eps_z.reshape((-1, 1)) * E_field(self.u, self.r, self.z).imag**2 * 1e-9 * 8.854e-12).sum(axis=0)
+
+        self.A_e_z_pt = find_percentile(energy_density_z, self.r)**2 * np.pi
+
+        print(f"Aest2 {self.A_e_z_pt/1e6:.3f}")
 
         self.c=self.energy*2
 
@@ -740,6 +756,8 @@ class CapSolAll:
     def run(self, solver=la.bicgstab):
         p = self.params
         self.C = np.zeros_like(p.ds)
+        self.A_eff = np.zeros_like(p.ds)
+        self.A_eff_z = np.zeros_like(p.ds)
         print(f"Stepping from {p.d} to {p.dmax} by {p.istep*p.h0} nm")
         print(f"Total simulations: {p.Npts}")
         for i, dist in enumerate(p.ds):
@@ -767,6 +785,11 @@ class CapSolAll:
             
 
             self.C[i] = self.process() # Save capacitance to array...
+
+            # Two estimates of the effective area...
+            self.A_eff[i] = self.A_e_pt
+            self.A_eff_z[i] = self.A_e_z_pt
+
             self.u_old = copy.copy(self.u)
             print(f"{i+1}. d = {p.d} nm, tSetup = {setup_time.seconds/60:.2f} m, tSolve = {solve_time.seconds/60:.2f} m, C = {self.C[i]:.4e} F")
             # print(self.params.d)
@@ -1192,9 +1215,14 @@ class SphereTestSample:
     def process(self):
         self.dV = dV =  grid_area(self.r, self.z)
 
+        self.energy_density = 0.5 * dV * self.eps_z.reshape((-1, 1)) * abs(E_field(self.u, self.r, self.z))**2 * 1e-9 * 8.854e-12
+
         self.energy = 0.5 * np.sum(dV * self.eps_z.reshape((-1, 1)) * abs(E_field(self.u, self.r, self.z))**2) * 1e-9 * 8.854e-12
 
+        
         self.energy_z = 0.5 * np.sum(dV * self.eps_z.reshape((-1, 1)) * E_field(self.u, self.r, self.z).imag**2) * 1e-9 * 8.854e-12
+
+        self.energy_density_z = 0.5 * dV * self.eps_z.reshape((-1, 1)) * E_field(self.u, self.r, self.z).imag**2 * 1e-9 * 8.854e-12
 
         self.c=self.energy*2
 

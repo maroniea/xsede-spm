@@ -67,6 +67,16 @@ def run():
 
     if 'C_zz' not in st.session_state:
         st.session_state.C_zz = None
+    
+    if 'A_eff' not in st.session_state:
+        st.session_state.A_eff = None
+    
+    if 'A_eff_z' not in st.session_state:
+        st.session_state.A_eff_z = None
+    
+    if 'd' not in st.session_state:
+        st.session_state.d = None
+    
 
 
 
@@ -133,6 +143,9 @@ def run():
         st.session_state.C =  np.array(cp_sample.C)
         st.session_state.C_z =  np.gradient(st.session_state.C) / (cp_sample.params.h0*cp_sample.params.istep*1e-9)
         st.session_state.C_zz =  np.gradient(st.session_state.C_z) / (cp_sample.params.h0*cp_sample.params.istep*1e-9)
+        st.session_state.A_eff = cp_sample.A_eff
+        st.session_state.A_eff_z = cp_sample.A_eff_z
+        st.session_state.d = cp_sample.params.ds
 
     if st.session_state.C is not None:
         s = st.session_state
@@ -150,12 +163,17 @@ def run():
         # st.markdown(f"$\\Delta C''$ = {delta_Czz:.4e} F/m²")
         # st.markdown(f"$\\alpha_\\mathrm{{q-osc}}$ = {alpha_qosc:.3f}")
 
-        df = pd.DataFrame({"C (F)": s.C, "C' (F/m)": s.C_z, "C'' (F/m²)":s.C_zz, "ΔC'' (F/m²)":delta_Czz, "C''_q (F/m²)": Czz_q,
-                            "α_qosc": alpha_qosc})
+        df = pd.DataFrame({'d (nm)': s.d,
+                            "C (F)": s.C, "C' (F/m)": s.C_z, "C'' (F/m²)":s.C_zz, "ΔC'' (F/m²)":delta_Czz, "C''_q (F/m²)": Czz_q,
+                            "α_qosc": alpha_qosc,
+                            "A_eff (um²)": s.A_eff*1e-6,
+                            "A_eff_z (um²)": s.A_eff_z*1e-6})
 
         st.dataframe(df.style
                     .format("{:.3e}")
-                    .format("{:.4f}", subset='α_qosc'))
+                    .format("{:.4f}", subset=['α_qosc', 'A_eff (um²)', 'A_eff_z (um²)'])
+                    .format("{:.2f}", subset='d (nm)')
+                    )
 
         st.markdown("### Download data to Excel")
         filename = st.text_input("Filename:", value="capsol")
