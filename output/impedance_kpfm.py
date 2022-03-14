@@ -406,7 +406,7 @@ class KPFMModel:
         # st.write(self.H(1.0, *params))
         # st.write(self.impedance.Zfunc(1.0, *params))
         # st.write(2.0j*np.pi*(self.tip.f0*1e-6)*self.impedance.Zfunc(1.0, *params))
-        return (self.tip.f0 * (5000**2) / (8*self.tip.k0) * self.H(fm, *params)**2 * 
+        return (self.tip.f0 * (1000**2) / (8*self.tip.k0) * self.H(fm, *params)**2 * 
                 (self.tip.Czz_q + self.tip.Delta_Czz * self.Hbar(fm, self.tip.f0, *params)))
 
     def BLDS_fm(self, fm, *params):
@@ -490,19 +490,26 @@ This page fits KPFM impedance spectroscopy data to a circuit chosen below.
 
     Q = st.number_input("Quality factor Q (unitless)", value=3000.0)
 
+    tip_area = st.number_input("Tip area (um²)", value=1000.0)
+
     tip = Tip(C=Ctip_uF, Czz=Czz_uF, alpha_qosc=alpha_qosc, f0=f0_Hz, k0=k_c_uN_um, Q=Q)
 
 
-    st.write(tip)
-    st.write(f"Tip Cz: {tip.Cz} uF/um")
+    # st.write(tip)
+    # st.write(f"Tip Cz: {tip.Cz} uF/um")
+
+    st.markdown("Add sample area, tip area so everything can be scaled appropriately")
+
+    sample_area = st.number_input("Sample area (cm²)", value=1.0)
+    sample_area_um2 = sample_area * 1e8 # Convert to um²
+
+
 
 
 
     st.markdown("## Sample Circuit")
 
-    # Here is a nice circuit - we should probably be saving the value to local storage
-
-    circuit_str = st.text_input("Write out the sample circuit model:", value="R1-R2//C2")
+    circuit_str = st.text_input("Write out the sample circuit model:", value="R1//C1")
 
     with st.expander("Circuit help?"):
         st.markdown("""To use a circuit element, choose the first letter of the
@@ -587,9 +594,24 @@ C1 would be written `(R1-R2)//C1`""")
                 int(st.sidebar.number_input("Pts", value=100, format="%d"))
         )
 
-    st.sidebar.markdown("### Initial Parameters")
-    param_values = [st.sidebar.number_input(x.name, value=default_val(x.name),
+    st.sidebar.markdown("### Parameters")
+    scale_values = st.sidebar.checkbox("Scale parameters using sample/tip area", value=True)
+    param_values_orig = [st.sidebar.number_input(x.name, value=default_val(x.name),
                         format='%.2e') for x in mod.params_sorted]
+    
+    if scale_values:
+        param_values = []
+        for val, param in zip(param_values_orig, mod.params_sorted):
+            if param.name[0] == 'R':
+                param_values.append(val*sample_area_um2/tip_area) # Resistances become much larger
+            elif param.name[0] == 'C':
+                param_values.append(val*tip_area/sample_area_um2) # Capacitances become much smaller
+            else:
+                param_values.append(val)
+    else:
+        param_values = param_values_orig
+
+    st.write({key.name: val for key, val in zip(mod.params_sorted, param_values)})
 
     if plotModel:
         out = kmod.H(freqs, *param_values)
