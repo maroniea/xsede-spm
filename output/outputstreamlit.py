@@ -8,7 +8,7 @@ import impedance_kpfm
 st.title("Kelvin Probe Force Microscopy Impedance Model")
 
 apps = {"Electrochemical Impedance Fitting": impedance,
-        "Original KPFM analysis": output_streamlit_orig, 
+        "Capsolpy KPFM Simulation": output_streamlit_orig, 
         "KPFM Impedance Model": impedance_kpfm
 }
 
